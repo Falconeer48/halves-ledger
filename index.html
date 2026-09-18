@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Halves</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2833'/%3E%3Cpath d='M9 8h5v7h4V8h5v16h-5v-6h-4v6H9V8z' fill='%23f4f1ea'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f3f1ec;
+      --ink: #1c1b18;
+      --muted: #6b675e;
+      --line: #ddd8ce;
+      --card: #fbfaf7;
+      --paper: #ece8df;
+      --navy: #1f2833;
+      --navy-2: #2a3441;
+      --cream: #ece8df;
+      --owe: #8a4334;
+      --credit: #2f4a3c;
+      --danger: #8f3d32;
+      --shadow: 0 0 0 1px rgba(28,27,24,.06), 0 1px 2px -1px rgba(28,27,24,.06), 0 2px 4px rgba(28,27,24,.04);
+      --display: "Newsreader", Georgia, serif;
+      --sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+      --radius: 14px;
+      --sidebar: 240px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, [role="button"] { cursor: pointer; font-family: inherit; }
+    button:disabled { cursor: not-allowed; opacity: .5; }
+    input, select, textarea { font-family: inherit; font-size: 1rem; }
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: -.02em; margin: 0; }
+    .app { min-height: 100vh; display: flex; }
+    .sidebar {
+      width: var(--sidebar);
+      background: var(--navy);
+      color: var(--cream);
+      display: none;
+      flex-direction: column;
+      padding: 28px 18px 20px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+    .brand { font-family: var(--display); font-size: 1.7rem; font-style: italic; color: #f4f1ea; }
+    .brand span { display: block; font-family: var(--sans); font-style: normal; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: #9aa3ad; margin-top: 4px; }
+    .nav { margin-top: 36px; display: flex; flex-direction: column; gap: 4px; }
+    .nav a, .nav button.link {
+      display: flex; align-items: center; gap: 10px;
+      color: #c5ccd3; padding: 10px 12px; border-radius: 10px;
+      background: none; border: 0; text-align: left; font-size: .95rem;
+    }
+    .nav a.on, .nav a:hover, .nav button.link:hover { background: var(--navy-2); color: #f4f1ea; }
+    .side-foot { margin-top: auto; padding-top: 20px; font-size: .8rem; color: #9aa3ad; }
+    .main { flex: 1; min-width: 0; padding: 28px 22px 96px; max-width: 980px; }
+    .page-kicker { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .page-title { font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.6rem); margin: 6px 0 8px; line-height: 1.15; }
+    .lede { color: var(--muted); max-width: 40rem; margin-bottom: 24px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .grid { display: grid; gap: 14px; }
+    .cards { display: grid; gap: 14px; grid-template-columns: 1fr; }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px;
+    }
+    .card h3 { font-size: 1.25rem; }
+    .muted { color: var(--muted); font-size: .9rem; }
+    .amount { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .owe { color: var(--owe); }
+    .credit { color: var(--credit); }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px; font-size: .78rem; font-weight: 600;
+      background: var(--paper); color: var(--ink);
+    }
+    .pill.owe { background: #f3e4df; color: var(--owe); }
+    .pill.even { background: #e4ece7; color: var(--credit); }
+    .btn {
+      border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 600;
+      background: var(--navy); color: #f4f1ea; font-size: .92rem;
+    }
+    .btn:hover { background: var(--navy-2); }
+    .btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+    .btn.ghost:hover { background: var(--paper); }
+    .btn.danger { background: var(--danger); }
+    .btn.sm { padding: 7px 11px; font-size: .82rem; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 20px; }
+    .list-row {
+      display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+      padding: 12px 0; border-top: 1px solid var(--line);
+    }
+    .list-row:first-child { border-top: 0; }
+    .progress { height: 6px; background: var(--paper); border-radius: 99px; overflow: hidden; margin: 10px 0 6px; }
+    .progress > i { display: block; height: 100%; background: var(--navy); border-radius: 99px; }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .bottom {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      background: var(--navy); display: flex; justify-content: space-around;
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+      z-index: 20;
+    }
+    .bottom a {
+      color: #9aa3ad; font-size: .68rem; font-weight: 600; letter-spacing: .04em;
+      text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 6px 8px; min-width: 56px;
+    }
+    .bottom a.on { color: #f4f1ea; }
+    .overlay {
+      position: fixed; inset: 0; background: rgba(28,27,24,.42);
+      display: none; align-items: flex-end; justify-content: center; z-index: 40; padding: 16px;
+    }
+    .overlay.open { display: flex; }
+    .dialog {
+      background: var(--card); width: min(520px, 100%);
+      border-radius: 18px 18px 12px 12px; padding: 22px 20px 18px;
+      max-height: min(88vh, 720px); overflow: auto;
+      box-shadow: 0 20px 50px rgba(28,27,24,.25);
+    }
+    .dialog h2 { font-size: 1.55rem; margin-bottom: 14px; }
+    label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin: 12px 0 6px; letter-spacing: .04em; text-transform: uppercase; }
+    input, select, textarea {
+      width: 100%; border: 1px solid var(--line); background: #fff; color: var(--ink);
+      border-radius: 10px; padding: 10px 12px;
+    }
+    textarea { min-height: 72px; resize: vertical; }
+    .split { display: flex; gap: 8px; align-items: center; }
+    .empty { padding: 28px 8px; color: var(--muted); }
+    .danger-text { color: var(--danger); font-size: .88rem; }
+    @media (min-width: 860px) {
+      .sidebar { display: flex; }
+      .bottom { display: none; }
+      .main { padding: 40px 48px 64px; }
+      .cards { grid-template-columns: 1fr 1fr; }
+      .cards.three { grid-template-columns: 1fr 1fr 1fr; }
+      .overlay { align-items: center; }
+      .dialog { border-radius: 18px; }
+    }
+    @media print {
+      .sidebar, .bottom, .toolbar, .btn, .overlay { display: none !important; }
+      .main { padding: 0; max-width: none; }
+      body { background: #fff; }
+      .card { box-shadow: none; border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">Halves<span id="side-property">Household ledger</span></div>
+      <nav class="nav" id="side-nav"></nav>
+      <div class="side-foot" id="side-balance"></div>
+    </aside>
+    <main class="main" id="view"></main>
+  </div>
+  <nav class="bottom" id="bottom-nav"></nav>
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true"></div>
+
+<script>
+const KEY = "halves-ledger-v1";
+const ICONS = {
+  home: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5z"/></svg>',
+  scroll: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 6h11v13a2 2 0 0 1-2 2H8a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2h12"/><path d="M8 10h8M8 14h6"/></svg>',
+  house: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3V10.5z"/><path d="M9 21v-8h6v8"/></svg>',
+  palm: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 22V11"/><path d="M12 11c-2-5-7-6-9-5 3 3 4 5 4 8"/><path d="M12 11c2-5 7-6 9-5-3 3-4 5-4 8"/><path d="M8 22h8"/></svg>',
+  report: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M7 3h8l5 5v13H7V3z"/><path d="M15 3v5h5M9 13h8M9 17h5"/></svg>',
+  gear: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a7.7 7.7 0 0 0 .1-1.8l2-1.2-2-3.4-2.3.5a7.6 7.6 0 0 0-1.5-.9L15 4h-4l-.7 2.6c-.5.2-1 .5-1.5.9L6.5 7l-2 3.4 2 1.2a7.7 7.7 0 0 0 0 1.8l-2 1.2 2 3.4 2.3-.5c.5.4 1 .7 1.5.9L11 20h4l.7-2.6c.5-.2 1-.5 1.5-.9l2.3.5 2-3.4-2-1.2z"/></svg>'
+};
+
+const DEMO = {
+  people: { a: { id: "a", name: "Alex" }, b: { id: "b", name: "Sam" } },
+  settings: { propertyName: "Willow House", currency: "USD" },
+  contracts: [
+    { id: "c-solar", name: "Solar array", vendor: "Helio & Co.", totalCents: 1840000, notes: "14.2 kW rooftop. Final invoice on commissioning.", createdAt: "2026-03-01T10:00:00.000Z" },
+    { id: "c-drive", name: "Driveway reseal", vendor: "PaveRight", totalCents: 280000, notes: "Full reseal, April 2026.", createdAt: "2026-04-02T10:00:00.000Z" }
+  ],
+  house: [
+    { id: "h-rates", name: "Rates & taxes", notes: "Annual property rates.", createdAt: "2026-01-01T10:00:00.000Z" },
+    { id: "h-ins", name: "Home insurance", notes: "Building and contents.", createdAt: "2026-01-01T10:00:00.000Z" },
+    { id: "h-util", name: "Utilities", notes: "Electricity, water, waste.", createdAt: "2026-01-01T10:00:00.000Z" },
+    { id: "h-maint", name: "Maintenance", notes: "Repairs and upkeep.", createdAt: "2026-01-01T10:00:00.000Z" }
+  ],
+  trips: [
+    { id: "t-or", name: "Oregon Coast", location: "Cannon Beach", startDate: "2026-05-12", endDate: "2026-05-16", notes: "Lodge, meals, hiking.", createdAt: "2026-04-20T10:00:00.000Z" },
+    { id: "t-mtl", name: "Montreal", location: "Montreal, QC", startDate: "2026-07-03", endDate: "2026-07-06", notes: "City break.", createdAt: "2026-05-28T10:00:00.000Z" }
+  ],
+  expenses: [
+    { id:"e1", kind:"contract", targetId:"c-solar", date:"2026-03-12", description:"Deposit", amountCents:460000, paidBy:"a", splitA:50 },
+    { id:"e2", kind:"contract", targetId:"c-solar", date:"2026-06-02", description:"Second installment", amountCents:460000, paidBy:"a", splitA:50 },
+    { id:"e3", kind:"contract", targetId:"c-solar", date:"2026-06-02", description:"Second installment", amountCents:460000, paidBy:"b", splitA:50 },
+    { id:"e4", kind:"contract", targetId:"c-drive", date:"2026-04-18", description:"Full contract payment", amountCents:280000, paidBy:"a", splitA:50 },
+    { id:"e5", kind:"house", targetId:"h-rates", date:"2026-01-15", description:"Annual rates", amountCents:214000, paidBy:"b", splitA:50 },
+    { id:"e6", kind:"house", targetId:"h-ins", date:"2026-02-01", description:"Annual premium", amountCents:168000, paidBy:"a", splitA:50 },
+    { id:"e7", kind:"house", targetId:"h-util", date:"2026-06-30", description:"Electricity — June", amountCents:18600, paidBy:"a", splitA:50 },
+    { id:"e8", kind:"house", targetId:"h-util", date:"2026-06-30", description:"Water — June", amountCents:6400, paidBy:"b", splitA:50 },
+    { id:"e9", kind:"house", targetId:"h-util", date:"2026-07-31", description:"Electricity — July", amountCents:21200, paidBy:"b", splitA:50 },
+    { id:"e10", kind:"house", targetId:"h-util", date:"2026-07-31", description:"Water — July", amountCents:7100, paidBy:"a", splitA:50 },
+    { id:"e11", kind:"house", targetId:"h-util", date:"2026-08-31", description:"Electricity — August", amountCents:19800, paidBy:"a", splitA:50 },
+    { id:"e12", kind:"house", targetId:"h-maint", date:"2026-05-09", description:"Gutter clean", amountCents:48000, paidBy:"b", splitA:50 },
+    { id:"e13", kind:"house", targetId:"h-maint", date:"2026-08-14", description:"Plumber — kitchen tap", amountCents:22000, paidBy:"a", splitA:50 },
+    { id:"e14", kind:"trip", targetId:"t-or", date:"2026-05-11", description:"Lodge, four nights", amountCents:124000, paidBy:"a", splitA:50 },
+    { id:"e15", kind:"trip", targetId:"t-or", date:"2026-05-16", description:"Meals", amountCents:38600, paidBy:"b", splitA:50 },
+    { id:"e16", kind:"trip", targetId:"t-or", date:"2026-05-16", description:"Fuel", amountCents:16400, paidBy:"b", splitA:50 },
+    { id:"e17", kind:"trip", targetId:"t-or", date:"2026-05-14", description:"Haystack Rock tour", amountCents:9500, paidBy:"a", splitA:50 },
+    { id:"e18", kind:"trip", targetId:"t-mtl", date:"2026-05-30", description:"Flights (both)", amountCents:64000, paidBy:"b", splitA:50 },
+    { id:"e19", kind:"trip", targetId:"t-mtl", date:"2026-07-03", description:"Hotel, three nights", amountCents:89000, paidBy:"a", splitA:50 },
+    { id:"e20", kind:"trip", targetId:"t-mtl", date:"2026-07-06", description:"Dinners", amountCents:27500, paidBy:"a", splitA:50 },
+    { id:"e21", kind:"trip", targetId:"t-mtl", date:"2026-07-05", description:"Metro and taxis", amountCents:4800, paidBy:"b", splitA:50 }
+  ],
+  transfers: [
+    { id:"x1", date:"2026-08-01", amountCents:50000, from:"b", to:"a", kind:"overall", targetId:null, notes:"Catch-up on the house" }
+  ]
+};
+
+function emptyLedger() {
+  return {
+    people: { a: { id: "a", name: "Alex" }, b: { id: "b", name: "Sam" } },
+    settings: { propertyName: "Home", currency: "USD" },
+    contracts: [], house: [], trips: [], expenses: [], transfers: []
+  };
+}
+
+function clone(v) { return JSON.parse(JSON.stringify(v)); }
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return clone(DEMO);
+    const d = JSON.parse(raw);
+    if (!d || !d.people || !d.expenses) return clone(DEMO);
+    d.house = d.house || d.houseCategories || [];
+    d.contracts = d.contracts || [];
+    d.trips = d.trips || [];
+    d.transfers = d.transfers || [];
+    return d;
+  } catch {
+    return clone(DEMO);
+  }
+}
+
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+let state = load();
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+}
+function uid() { return crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now() + Math.random().toString(16).slice(2); }
+function today() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function money(cents) {
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency: state.settings.currency || "USD" }).format((cents || 0) / 100);
+  } catch {
+    return ((cents || 0) / 100).toFixed(2);
+  }
+}
+function prettyDate(iso) {
+  if (!iso) return "";
+  const [y,m,d] = iso.split("-").map(Number);
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(y, m-1, d));
+}
+function nameOf(id) { return state.people[id]?.name || id; }
+function dollarsToCents(v) {
+  const n = parseFloat(String(v).replace(/,/g, ""));
+  if (!isFinite(n) || n < 0) return null;
+  return Math.round(n * 100);
+}
+
+function balance(expenses, transfers) {
+  let total = 0, paidA = 0, paidB = 0, shareA = 0;
+  for (const e of expenses) {
+    total += e.amountCents;
+    if (e.paidBy === "a") paidA += e.amountCents; else paidB += e.amountCents;
+    shareA += Math.round((e.amountCents * (e.splitA ?? 50)) / 100);
+  }
+  let netA = paidA - shareA;
+  for (const t of transfers) {
+    if (t.from === "a" && t.to === "b") netA += t.amountCents;
+    else if (t.from === "b" && t.to === "a") netA -= t.amountCents;
+  }
+  const owed = Math.abs(netA);
+  const even = owed < 1;
+  return {
+    total, paidA, paidB, shareA, shareB: total - shareA, netA,
+    even,
+    debtor: even ? null : (netA > 0 ? "b" : "a"),
+    creditor: even ? null : (netA > 0 ? "a" : "b"),
+    owed
+  };
+}
+function filterExp(kind, id, from, to) {
+  return state.expenses.filter(e => {
+    if (kind && e.kind !== kind) return false;
+    if (id && e.targetId !== id) return false;
+    if (from && e.date < from) return false;
+    if (to && e.date > to) return false;
+    return true;
+  });
+}
+function filterXfer(kind, id, from, to) {
+  return state.transfers.filter(t => {
+    if (kind && kind !== "overall") {
+      if (t.kind !== kind) return false;
+      if (id && t.targetId !== id) return false;
+    }
+    if (from && t.date < from) return false;
+    if (to && t.date > to) return false;
+    return true;
+  });
+}
+function whoLine(bal) {
+  if (bal.even) return `<span class="pill even">Settled</span>`;
+  return `<span class="pill owe">${esc(nameOf(bal.debtor))} owes ${esc(nameOf(bal.creditor))} ${esc(money(bal.owed))}</span>`;
+}
+
+function route() {
+  const h = (location.hash || "#/").replace(/^#/, "") || "/";
+  const parts = h.split("/").filter(Boolean);
+  return { parts, path: "/" + parts.join("/") };
+}
+
+function navHtml(active) {
+  const items = [
+    ["/", "Overview", ICONS.home],
+    ["/contracts", "Contracts", ICONS.scroll],
+    ["/house", "House", ICONS.house],
+    ["/trips", "Trips", ICONS.palm],
+    ["/report", "Report", ICONS.report],
+    ["/settings", "Settings", ICONS.gear]
+  ];
+  return items.map(([href, label, icon]) => {
+    const on = active === href || (href !== "/" && active.startsWith(href));
+    return `<a href="#${href}" class="${on ? "on" : ""}">${icon}${label}</a>`;
+  }).join("");
+}
+
+function closeDialog() {
+  document.getElementById("overlay").classList.remove("open");
+  document.getElementById("overlay").innerHTML = "";
+}
+function openDialog(html) {
+  const el = document.getElementById("overlay");
+  el.innerHTML = `<div class="dialog">${html}</div>`;
+  el.classList.add("open");
+}
+
+function targetsFor(kind) {
+  if (kind === "contract") return state.contracts.map(x => ({ id: x.id, name: x.name }));
+  if (kind === "house") return state.house.map(x => ({ id: x.id, name: x.name }));
+  return state.trips.map(x => ({ id: x.id, name: x.name }));
+}
+
+function paymentDialog(preset) {
+  const kind = preset?.kind || "house";
+  const targets = targetsFor(kind);
+  const options = ["contract","house","trip"].map(k => `<option value="${k}" ${k===kind?"selected":""}>${k[0].toUpperCase()+k.slice(1)}</option>`).join("");
+  const tOpts = targets.map(t => `<option value="${esc(t.id)}" ${preset?.targetId===t.id?"selected":""}>${esc(t.name)}</option>`).join("");
+  openDialog(`
+    <h2>Add payment</h2>
+    <form id="pay-form">
+      <label>Type</label>
+      <select name="kind">${options}</select>
+      <label>Against</label>
+      <select name="targetId">${tOpts || "<option value=''>Add a contract, house category, or trip first</option>"}</select>
+      <label>Date</label>
+      <input type="date" name="date" value="${today()}" required />
+      <label>Description</label>
+      <input name="description" placeholder="Deposit, rates, hotel…" required />
+      <label>Amount</label>
+      <input name="amount" type="number" min="0" step="0.01" placeholder="0.00" required />
+      <label>Paid by</label>
+      <select name="paidBy">
+        <option value="a">${esc(nameOf("a"))}</option>
+        <option value="b">${esc(nameOf("b"))}</option>
+      </select>
+      <label>Share for ${esc(nameOf("a"))} (%)</label>
+      <div class="split">
+        <input name="splitA" type="number" min="0" max="100" value="50" />
+        <span class="muted">Default 50/50</span>
+      </div>
+      <div class="toolbar" style="margin-top:18px">
+        <button class="btn" type="submit">Save payment</button>
+        <button class="btn ghost" type="button" data-act="close">Cancel</button>
+      </div>
+    </form>
+  `);
+  const form = document.getElementById("pay-form");
+  form.kind.addEventListener("change", () => {
+    const k = form.kind.value;
+    const t = targetsFor(k);
+    form.targetId.innerHTML = t.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("") || "<option value=''>None yet</option>";
+  });
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const cents = dollarsToCents(form.amount.value);
+    if (cents == null || !form.targetId.value) return;
+    const splitA = Math.max(0, Math.min(100, Number(form.splitA.value) || 50));
+    state.expenses.push({
+      id: uid(), kind: form.kind.value, targetId: form.targetId.value,
+      date: form.date.value, description: form.description.value.trim(),
+      amountCents: cents, paidBy: form.paidBy.value, splitA
+    });
+    save(); closeDialog(); render();
+  });
+}
+
+function settleDialog(preset) {
+  openDialog(`
+    <h2>Settle up</h2>
+    <p class="muted">Record a transfer so the balance updates.</p>
+    <form id="settle-form">
+      <label>Date</label>
+      <input type="date" name="date" value="${today()}" required />
+      <label>From</label>
+      <select name="from">
+        <option value="a">${esc(nameOf("a"))}</option>
+        <option value="b">${esc(nameOf("b"))}</option>
+      </select>
+      <label>To</label>
+      <select name="to">
+        <option value="b">${esc(nameOf("b"))}</option>
+        <option value="a">${esc(nameOf("a"))}</option>
+      </select>
+      <label>Amount</label>
+      <input name="amount" type="number" min="0" step="0.01" required />
+      <label>Apply to</label>
+      <select name="scope">
+        <option value="overall">Overall balance</option>
+        <option value="contract">A contract</option>
+        <option value="house">A house category</option>
+        <option value="trip">A trip</option>
+      </select>
+      <label>If scoped, pick one</label>
+      <select name="targetId"><option value="">—</option></select>
+      <label>Note</label>
+      <input name="notes" placeholder="Optional" />
+      <div class="toolbar" style="margin-top:18px">
+        <button class="btn" type="submit">Save transfer</button>
+        <button class="btn ghost" type="button" data-act="close">Cancel</button>
+      </div>
+    </form>
+  `);
+  const form = document.getElementById("settle-form");
+  const fill = () => {
+    const k = form.scope.value;
+    const t = k === "overall" ? [] : targetsFor(k);
+    form.targetId.innerHTML = `<option value="">—</option>` + t.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+  };
+  form.scope.addEventListener("change", fill);
+  fill();
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const cents = dollarsToCents(form.amount.value);
+    if (cents == null || form.from.value === form.to.value) return;
+    state.transfers.push({
+      id: uid(), date: form.date.value, amountCents: cents,
+      from: form.from.value, to: form.to.value,
+      kind: form.scope.value, targetId: form.targetId.value || null,
+      notes: form.notes.value.trim()
+    });
+    save(); closeDialog(); render();
+  });
+}
+
+function entityDialog(kind, existing) {
+  const titles = { contract: "Contract", house: "House cost", trip: "Trip" };
+  const isTrip = kind === "trip";
+  const isCon = kind === "contract";
+  openDialog(`
+    <h2>${existing ? "Edit" : "New"} ${titles[kind]}</h2>
+    <form id="ent-form">
+      <label>Name</label>
+      <input name="name" required value="${esc(existing?.name || "")}" />
+      ${isCon ? `<label>Vendor</label><input name="vendor" value="${esc(existing?.vendor || "")}" />
+        <label>Contract total (optional)</label><input name="total" type="number" min="0" step="0.01" value="${existing?.totalCents != null ? (existing.totalCents/100).toFixed(2) : ""}" />` : ""}
+      ${kind === "house" ? `<label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
+      ${isTrip ? `<label>Location</label><input name="location" value="${esc(existing?.location || "")}" />
+        <label>Start</label><input type="date" name="startDate" value="${esc(existing?.startDate || "")}" />
+        <label>End</label><input type="date" name="endDate" value="${esc(existing?.endDate || "")}" />
+        <label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
+      ${isCon ? `<label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
+      <div class="toolbar" style="margin-top:18px">
+        <button class="btn" type="submit">Save</button>
+        <button class="btn ghost" type="button" data-act="close">Cancel</button>
+        ${existing ? `<button class="btn danger" type="button" id="del-ent">Delete</button>` : ""}
+      </div>
+    </form>
+  `);
+  const form = document.getElementById("ent-form");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = form.name.value.trim();
+    if (!name) return;
+    if (kind === "contract") {
+      const total = form.total.value ? dollarsToCents(form.total.value) : null;
+      const row = { id: existing?.id || uid(), name, vendor: form.vendor.value.trim(), totalCents: total, notes: form.notes.value.trim(), createdAt: existing?.createdAt || new Date().toISOString() };
+      if (existing) state.contracts = state.contracts.map(x => x.id === existing.id ? row : x);
+      else state.contracts.push(row);
+    } else if (kind === "house") {
+      const row = { id: existing?.id || uid(), name, notes: form.notes.value.trim(), createdAt: existing?.createdAt || new Date().toISOString() };
+      if (existing) state.house = state.house.map(x => x.id === existing.id ? row : x);
+      else state.house.push(row);
+    } else {
+      const row = { id: existing?.id || uid(), name, location: form.location.value.trim(), startDate: form.startDate.value, endDate: form.endDate.value, notes: form.notes.value.trim(), createdAt: existing?.createdAt || new Date().toISOString() };
+      if (existing) state.trips = state.trips.map(x => x.id === existing.id ? row : x);
+      else state.trips.push(row);
+    }
+    save(); closeDialog(); render();
+  });
+  const del = document.getElementById("del-ent");
+  if (del) del.addEventListener("click", () => {
+    if (!confirm("Delete this and keep its payments? Payments stay in the report unless you delete them too.")) return;
+    if (kind === "contract") state.contracts = state.contracts.filter(x => x.id !== existing.id);
+    if (kind === "house") state.house = state.house.filter(x => x.id !== existing.id);
+    if (kind === "trip") state.trips = state.trips.filter(x => x.id !== existing.id);
+    save(); closeDialog(); location.hash = "#/" + (kind === "house" ? "house" : kind === "trip" ? "trips" : "contracts");
+  });
+}
+
+function expenseRows(list) {
+  if (!list.length) return `<div class="empty">No payments yet.</div>`;
+  return list.slice().sort((a,b) => b.date.localeCompare(a.date) || (b.id > a.id ? 1 : -1)).map(e => `
+    <div class="list-row">
+      <div>
+        <div>${esc(e.description)}</div>
+        <div class="muted">${prettyDate(e.date)} · ${esc(nameOf(e.paidBy))} paid · split ${e.splitA}/${100-e.splitA}</div>
+      </div>
+      <div class="amount">${esc(money(e.amountCents))}</div>
+    </div>
+  `).join("");
+}
+
+function bucketCard(href, title, meta, bal, extra) {
+  return `<a class="card" href="#${href}">
+    <h3>${esc(title)}</h3>
+    <div class="muted">${esc(meta)}</div>
+    ${extra || ""}
+    <div style="margin-top:10px">${whoLine(bal)}</div>
+    <div class="muted" style="margin-top:8px">Paid ${esc(money(bal.total))}</div>
+  </a>`;
+}
+
+function renderOverview() {
+  const overall = balance(state.expenses, state.transfers);
+  const cBal = balance(filterExp("contract"), filterXfer("contract"));
+  const hBal = balance(filterExp("house"), filterXfer("house"));
+  const tBal = balance(filterExp("trip"), filterXfer("trip"));
+  const recent = [...state.expenses.map(e => ({...e, _t:"pay"})), ...state.transfers.map(t => ({...t, _t:"xfer"}))]
+    .sort((a,b) => (b.date||"").localeCompare(a.date||"")).slice(0, 8);
+  return `
+    <div class="page-kicker">${esc(state.settings.propertyName)}</div>
+    <h1 class="page-title">Who owes whom</h1>
+    <p class="lede">${overall.even ? "You are settled overall." : `${esc(nameOf(overall.debtor))} owes ${esc(nameOf(overall.creditor))} <strong>${esc(money(overall.owed))}</strong> across contracts, house costs, and trips.`}</p>
+    <div class="toolbar">
+      <button class="btn" data-act="pay">Add payment</button>
+      <button class="btn ghost" data-act="settle">Settle up</button>
+    </div>
+    <div class="cards three">
+      ${bucketCard("/contracts", "Contracts", state.contracts.length + " open", cBal)}
+      ${bucketCard("/house", "House", state.house.length + " categories", hBal)}
+      ${bucketCard("/trips", "Trips", state.trips.length + " trips", tBal)}
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>Recent</h3>
+      ${recent.length ? recent.map(item => item._t === "pay" ? `
+        <div class="list-row">
+          <div><div>${esc(item.description)}</div><div class="muted">${prettyDate(item.date)} · ${esc(nameOf(item.paidBy))}</div></div>
+          <div class="amount">${esc(money(item.amountCents))}</div>
+        </div>` : `
+        <div class="list-row">
+          <div><div>Transfer</div><div class="muted">${prettyDate(item.date)} · ${esc(nameOf(item.from))} → ${esc(nameOf(item.to))}</div></div>
+          <div class="amount">${esc(money(item.amountCents))}</div>
+        </div>`).join("") : `<div class="empty">Nothing recorded yet.</div>`}
+    </div>
+  `;
+}
+
+function renderList(kind) {
+  const cfg = {
+    contract: { title: "Contracts", add: "New contract", items: state.contracts, href: (id) => "/contracts/" + id, empty: "No contracts yet. Add a builder, solar, or service agreement." },
+    house: { title: "House costs", add: "New category", items: state.house, href: (id) => "/house/" + id, empty: "No house categories yet. Try rates, insurance, utilities." },
+    trip: { title: "Trips", add: "New trip", items: state.trips, href: (id) => "/trips/" + id, empty: "No trips yet." }
+  }[kind];
+  const cards = cfg.items.map(item => {
+    const bal = balance(filterExp(kind, item.id), filterXfer(kind, item.id));
+    let meta = item.vendor || item.location || item.notes || "";
+    if (kind === "trip" && item.startDate) meta = [item.location, prettyDate(item.startDate) + (item.endDate ? " – " + prettyDate(item.endDate) : "")].filter(Boolean).join(" · ");
+    let extra = "";
+    if (kind === "contract" && item.totalCents) {
+      const pct = Math.min(100, Math.round((bal.total / item.totalCents) * 100));
+      extra = `<div class="progress"><i style="width:${pct}%"></i></div><div class="muted">${esc(money(bal.total))} of ${esc(money(item.totalCents))}</div>`;
+    }
+    return bucketCard(cfg.href(item.id), item.name, meta, bal, extra);
+  }).join("");
+  return `
+    <div class="page-kicker">Ledger</div>
+    <h1 class="page-title">${cfg.title}</h1>
+    <div class="toolbar">
+      <button class="btn" data-act="entity" data-kind="${kind}">${cfg.add}</button>
+      <button class="btn ghost" data-act="pay" data-kind="${kind}">Add payment</button>
+    </div>
+    <div class="cards">${cards || `<div class="card empty">${cfg.empty}</div>`}</div>
+  `;
+}
+
+function renderDetail(kind, id) {
+  const item = (kind === "contract" ? state.contracts : kind === "house" ? state.house : state.trips).find(x => x.id === id);
+  if (!item) return `<h1 class="page-title">Not found</h1><p><a href="#/${kind === "trip" ? "trips" : kind === "house" ? "house" : "contracts"}">Back</a></p>`;
+  const ex = filterExp(kind, id);
+  const xf = filterXfer(kind, id);
+  const bal = balance(ex, xf);
+  let extra = "";
+  if (kind === "contract" && item.totalCents) {
+    const pct = Math.min(100, Math.round((bal.total / item.totalCents) * 100));
+    extra = `<div class="progress"><i style="width:${pct}%"></i></div><div class="muted">${esc(money(bal.total))} of ${esc(money(item.totalCents))} paid</div>`;
+  }
+  const back = kind === "trip" ? "/trips" : kind === "house" ? "/house" : "/contracts";
+  return `
+    <div class="page-kicker"><a href="#${back}">← ${kind === "trip" ? "Trips" : kind === "house" ? "House" : "Contracts"}</a></div>
+    <h1 class="page-title">${esc(item.name)}</h1>
+    <p class="lede">${esc(item.vendor || item.location || item.notes || "")}</p>
+    ${extra}
+    <p>${whoLine(bal)}</p>
+    <div class="toolbar">
+      <button class="btn" data-act="pay" data-kind="${kind}" data-id="${esc(id)}">Add payment</button>
+      <button class="btn ghost" data-act="settle">Settle up</button>
+      <button class="btn ghost" data-act="entity" data-kind="${kind}" data-id="${esc(id)}">Edit</button>
+    </div>
+    <div class="card"><h3>Payments</h3>${expenseRows(ex)}</div>
+    ${xf.length ? `<div class="card" style="margin-top:14px"><h3>Transfers</h3>${xf.map(t => `<div class="list-row"><div>${prettyDate(t.date)} · ${esc(nameOf(t.from))} → ${esc(nameOf(t.to))}</div><div class="amount">${esc(money(t.amountCents))}</div></div>`).join("")}</div>` : ""}
+  `;
+}
+
+function renderReport() {
+  const from = document.getElementById("r-from")?.value || "";
+  const to = document.getElementById("r-to")?.value || "";
+  const kinds = [
+    { key: "overall", label: "Overall", exp: filterExp(null, null, from, to), xf: filterXfer("overall", null, from, to) },
+    ...state.contracts.map(c => ({ key: c.id, label: "Contract · " + c.name, exp: filterExp("contract", c.id, from, to), xf: filterXfer("contract", c.id, from, to) })),
+    ...state.house.map(c => ({ key: c.id, label: "House · " + c.name, exp: filterExp("house", c.id, from, to), xf: filterXfer("house", c.id, from, to) })),
+    ...state.trips.map(c => ({ key: c.id, label: "Trip · " + c.name, exp: filterExp("trip", c.id, from, to), xf: filterXfer("trip", c.id, from, to) }))
+  ];
+  const rows = kinds.map(k => {
+    const b = balance(k.exp, k.xf);
+    if (!k.exp.length && !k.xf.length && k.key !== "overall") return "";
+    const line = b.even ? "Settled" : `${nameOf(b.debtor)} owes ${nameOf(b.creditor)} ${money(b.owed)}`;
+    return `<tr><td>${esc(k.label)}</td><td>${esc(money(b.total))}</td><td>${esc(nameOf("a"))} ${esc(money(b.paidA))}</td><td>${esc(nameOf("b"))} ${esc(money(b.paidB))}</td><td class="${b.even ? "credit" : "owe"}">${esc(line)}</td></tr>`;
+  }).join("");
+  const overall = balance(filterExp(null, null, from, to), filterXfer("overall", null, from, to));
+  return `
+    <div class="page-kicker">Statement</div>
+    <h1 class="page-title">Who owes whom</h1>
+    <p class="lede">${overall.even ? "Settled across the selected dates." : `${esc(nameOf(overall.debtor))} owes ${esc(nameOf(overall.creditor))} <strong>${esc(money(overall.owed))}</strong>.`}</p>
+    <div class="toolbar">
+      <label style="margin:0">From <input id="r-from" type="date" value="${esc(from)}" /></label>
+      <label style="margin:0">To <input id="r-to" type="date" value="${esc(to)}" /></label>
+      <button class="btn ghost sm" data-act="reprint">Apply dates</button>
+      <button class="btn ghost sm" onclick="window.print()">Print</button>
+    </div>
+    <div class="card" style="overflow:auto">
+      <table>
+        <thead><tr><th>Bucket</th><th>Spend</th><th>${esc(nameOf("a"))} paid</th><th>${esc(nameOf("b"))} paid</th><th>Balance</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="5">Nothing in this range.</td></tr>`}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderSettings() {
+  return `
+    <div class="page-kicker">Preferences</div>
+    <h1 class="page-title">Settings</h1>
+    <form id="set-form" class="card" style="max-width:520px">
+      <label>Your name</label>
+      <input name="a" value="${esc(nameOf("a"))}" />
+      <label>Partner’s name</label>
+      <input name="b" value="${esc(nameOf("b"))}" />
+      <label>House / property name</label>
+      <input name="property" value="${esc(state.settings.propertyName)}" />
+      <label>Currency</label>
+      <select name="currency">${["USD","EUR","GBP","AUD","CAD","ZAR","NZD"].map(c => `<option ${state.settings.currency===c?"selected":""}>${c}</option>`).join("")}</select>
+      <div class="toolbar" style="margin-top:16px"><button class="btn" type="submit">Save</button></div>
+    </form>
+    <div class="card" style="margin-top:16px;max-width:520px">
+      <h3>Backup</h3>
+      <p class="muted">This file stores data in this browser only. Export a copy if you care about it.</p>
+      <div class="toolbar">
+        <button class="btn ghost" data-act="export">Export JSON</button>
+        <label class="btn ghost" style="margin:0">Import JSON<input type="file" id="imp" accept="application/json" hidden /></label>
+      </div>
+      <div class="toolbar">
+        <button class="btn ghost" data-act="demo">Load sample data</button>
+        <button class="btn danger" data-act="clear">Clear everything</button>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  const { parts } = route();
+  const root = parts[0] || "";
+  const id = parts[1];
+  const active = "/" + (root || "");
+  document.getElementById("side-nav").innerHTML = navHtml(active === "/" ? "/" : "/" + root);
+  document.getElementById("bottom-nav").innerHTML = navHtml(active === "/" ? "/" : "/" + root);
+  document.getElementById("side-property").textContent = state.settings.propertyName || "Household ledger";
+  const overall = balance(state.expenses, state.transfers);
+  document.getElementById("side-balance").innerHTML = overall.even ? "Settled" : `${esc(nameOf(overall.debtor))} owes ${esc(money(overall.owed))}`;
+  let html = "";
+  if (!root) html = renderOverview();
+  else if (root === "contracts" && id) html = renderDetail("contract", id);
+  else if (root === "contracts") html = renderList("contract");
+  else if (root === "house" && id) html = renderDetail("house", id);
+  else if (root === "house") html = renderList("house");
+  else if (root === "trips" && id) html = renderDetail("trip", id);
+  else if (root === "trips") html = renderList("trip");
+  else if (root === "report") html = renderReport();
+  else if (root === "settings") html = renderSettings();
+  else html = renderOverview();
+  document.getElementById("view").innerHTML = html;
+  document.title = (state.settings.propertyName || "Halves") + " · Halves";
+
+  const set = document.getElementById("set-form");
+  if (set) set.addEventListener("submit", (e) => {
+    e.preventDefault();
+    state.people.a.name = set.a.value.trim() || "Alex";
+    state.people.b.name = set.b.value.trim() || "Sam";
+    state.settings.propertyName = set.property.value.trim() || "Home";
+    state.settings.currency = set.currency.value;
+    save(); render();
+  });
+  const imp = document.getElementById("imp");
+  if (imp) imp.addEventListener("change", () => {
+    const f = imp.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const d = JSON.parse(reader.result);
+        if (!d.people || !d.expenses) throw new Error("bad");
+        state = d;
+        state.house = d.house || d.houseCategories || [];
+        save(); render();
+      } catch { alert("That file is not a Halves backup."); }
+    };
+    reader.readAsText(f);
+  });
+}
+
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-act]");
+  if (!t) {
+    if (e.target.id === "overlay") closeDialog();
+    return;
+  }
+  const act = t.getAttribute("data-act");
+  const kind = t.getAttribute("data-kind");
+  const id = t.getAttribute("data-id");
+  if (act === "close") closeDialog();
+  if (act === "pay") paymentDialog({ kind, targetId: id });
+  if (act === "settle") settleDialog();
+  if (act === "entity") {
+    const list = kind === "contract" ? state.contracts : kind === "house" ? state.house : state.trips;
+    entityDialog(kind, id ? list.find(x => x.id === id) : null);
+  }
+  if (act === "reprint") render();
+  if (act === "export") {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "halves-backup.json";
+    a.click();
+  }
+  if (act === "demo") {
+    if (confirm("Replace current data with the sample household?")) { state = clone(DEMO); save(); render(); }
+  }
+  if (act === "clear") {
+    if (confirm("Erase all payments, contracts, trips, and house costs on this browser?")) { state = emptyLedger(); save(); render(); }
+  }
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDialog(); });
+window.addEventListener("hashchange", render);
+render();
+</script>
+</body>
+</html>
