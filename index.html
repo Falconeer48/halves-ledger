@@ -144,7 +144,9 @@
     textarea { min-height: 72px; resize: vertical; }
     .split { display: flex; gap: 8px; align-items: center; }
     .empty { padding: 28px 8px; color: var(--muted); }
-    .fx-box { background: var(--paper); border-radius: 10px; padding: 12px; margin-top: 12px; font-size: .9rem; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 18px; }
+    .stats > div { background: var(--paper); border-radius: 12px; padding: 12px; }
+    .stats .lbl { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
     .fx-box strong { font-variant-numeric: tabular-nums; }
     @media (min-width: 860px) {
       .sidebar { display: flex; }
@@ -431,6 +433,41 @@ function filterXfer(kind, id, from, to) {
 function whoLine(bal) {
   if (bal.even) return `<span class="pill even">Settled</span>`;
   return `<span class="pill owe">${esc(nameOf(bal.debtor))} owes ${esc(nameOf(bal.creditor))} ${esc(money(bal.owed))}</span>`;
+}
+function contractPaid(id) {
+  return balance(filterExp("contract", id), []).total;
+}
+function stillToPay(totalCents, paidCents) {
+  if (totalCents == null) return null;
+  return totalCents - (paidCents || 0);
+}
+function remainingLine(totalCents, paidCents) {
+  const left = stillToPay(totalCents, paidCents);
+  if (left == null) return `<div class="muted">Set a contract total to track what is still due to the contractor.</div>`;
+  if (left <= 0) return `<span class="pill even">${left < 0 ? "Overpaid " + esc(money(-left)) : "Paid in full"}</span>`;
+  return `<span class="pill owe">Still to pay ${esc(money(left))}</span>`;
+}
+function remainingStats(totalCents, paidCents) {
+  if (totalCents == null) return remainingLine(null);
+  const left = stillToPay(totalCents, paidCents);
+  const pct = totalCents ? Math.min(100, Math.max(0, Math.round((paidCents / totalCents) * 100))) : 0;
+  return `
+    <div class="stats">
+      <div><div class="lbl">Contract total</div><div class="amount">${esc(money(totalCents))}</div></div>
+      <div><div class="lbl">Paid so far</div><div class="amount">${esc(money(paidCents))}</div></div>
+      <div><div class="lbl">Still to pay</div><div class="amount">${left <= 0 ? esc(money(0)) : esc(money(left))}</div></div>
+    </div>
+    <div class="progress"><i style="width:${pct}%"></i></div>
+    <div style="margin:8px 0 14px">${remainingLine(totalCents, paidCents)}</div>`;
+}
+function contractorsOutstanding() {
+  let due = 0, paid = 0;
+  for (const c of state.contracts) {
+    if (c.totalCents == null) continue;
+    due += c.totalCents;
+    paid += contractPaid(c.id);
+  }
+  return { due, paid, remaining: due - paid };
 }
 
 function route() {
@@ -723,7 +760,8 @@ function entityDialog(kind, existing) {
       <label>Name</label>
       <input name="name" required value="${esc(existing?.name || "")}" />
       ${isCon ? `<label>Vendor</label><input name="vendor" value="${esc(existing?.vendor || "")}" />
-        <label>Contract total (optional)</label><input name="total" type="number" min="0" step="0.01" value="${existing?.totalCents != null ? (existing.totalCents/100).toFixed(2) : ""}" />` : ""}
+        <label>Contract total (amount due to the contractor)</label><input name="total" type="number" min="0" step="0.01" value="${existing?.totalCents != null ? (existing.totalCents/100).toFixed(2) : ""}" />
+        <p class="muted">Used to show what is still left to pay on this contract.</p>` : ""}
       ${kind === "house" ? `<label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
       ${isTrip ? `<label>Location</label><input name="location" value="${esc(existing?.location || "")}" />
         <label>Trip currency</label>
@@ -795,7 +833,7 @@ function expenseRows(list) {
     <div class="list-row">
       <div>
         <div>${esc(e.description)}</div>
-        <div class="muted">${prettyDate(e.date)} · ${esc(nameOf(e.paidBy))} paid · ${esc(splitLabel(e))}${expenseCurrency(e) && expenseCurrency(e) !== (state.settings.currency||"ZAR") ? " · " + moneyIn(e.amountCents, expenseCurrency(e)) : ""}</div>
+        <div class="muted">${prettyDate(e.date)} · ${esc(nameOf(e.paidBy))} paid · ${esc(splitLabel(e))}${expenseCurrency(e) && expenseCurrency(e) !== (state.settings.currency||"ZAR") ? " · " + moneyIn(e.amountCents, expenseCurrency(e)) : ""}${e.kind === "contract" ? (() => { const c = state.contracts.find(x => x.id === e.targetId); const left = c ? stillToPay(c.totalCents, contractPaid(c.id)) : null; return left == null ? "" : (left <= 0 ? " · paid in full" : " · still to pay " + money(left)); })() : ""}</div>
         ${expenseCurrency(e) !== "ZAR" && (e.zarCents != null || toZarCents(e.amountCents, expenseCurrency(e), e.fxRate) != null) ? `<div class="muted">${esc(moneyZar(e.zarCents != null ? e.zarCents : toZarCents(e.amountCents, expenseCurrency(e), e.fxRate)))}${e.fxRate ? " at " + Number(e.fxRate).toFixed(4) + " / " + expenseCurrency(e) : ""}</div>` : ""}
       </div>
       <div class="row-end">
@@ -838,10 +876,12 @@ function renderOverview() {
   const tBal = balance(filterExp("trip"), filterXfer("trip"));
   const recent = [...state.expenses.map(e => ({...e, _t:"pay"})), ...state.transfers.map(t => ({...t, _t:"xfer"}))]
     .sort((a,b) => (b.date||"").localeCompare(a.date||"")).slice(0, 8);
+  const cLeft = contractorsOutstanding();
   return `
     <div class="page-kicker">${esc(state.settings.propertyName)}</div>
     <h1 class="page-title">Who owes whom</h1>
     <p class="lede">${overall.even ? "You are settled overall." : `${esc(nameOf(overall.debtor))} owes ${esc(nameOf(overall.creditor))} <strong>${esc(money(overall.owed))}</strong> across contracts, house costs, and trips.`}</p>
+    ${cLeft.due ? `<p class="lede">Still to pay contractors: <strong>${esc(money(Math.max(0, cLeft.remaining)))}</strong> of ${esc(money(cLeft.due))}.</p>` : ""}
     <div class="toolbar">
       <button class="btn" data-act="pay">Add payment</button>
       <button class="btn ghost" data-act="settle">Settle up</button>
@@ -887,9 +927,8 @@ function renderList(kind) {
       meta = [item.location, ccy, dates].filter(Boolean).join(" · ");
     }
     let extra = "";
-    if (kind === "contract" && item.totalCents) {
-      const pct = Math.min(100, Math.round((bal.total / item.totalCents) * 100));
-      extra = `<div class="progress"><i style="width:${pct}%"></i></div><div class="muted">${esc(money(bal.total))} of ${esc(money(item.totalCents))}</div>`;
+    if (kind === "contract") {
+      extra = remainingStats(item.totalCents, bal.total);
     }
     return bucketCard(cfg.href(item.id), item.name, meta, bal, extra);
   }).join("");
@@ -911,10 +950,7 @@ function renderDetail(kind, id) {
   const xf = filterXfer(kind, id);
   const bal = balance(ex, xf);
   let extra = "";
-  if (kind === "contract" && item.totalCents) {
-    const pct = Math.min(100, Math.round((bal.total / item.totalCents) * 100));
-    extra = `<div class="progress"><i style="width:${pct}%"></i></div><div class="muted">${esc(money(bal.total))} of ${esc(money(item.totalCents))} paid</div>`;
-  }
+  if (kind === "contract") extra = remainingStats(item.totalCents, bal.total);
   const back = kind === "trip" ? "/trips" : kind === "house" ? "/house" : "/contracts";
   return `
     <div class="page-kicker"><a href="#${back}">← ${kind === "trip" ? "Trips" : kind === "house" ? "House" : "Contracts"}</a></div>
@@ -1058,7 +1094,26 @@ function downloadExcel() {
     xRow([xCell(oweSentence("Trips", catBalance(buckets, "Trip")), "String", "oweline")]),
     blankRow(),
     headerRow(whoHeader),
-    ...whoRows
+    ...whoRows,
+    blankRow(),
+    sectionRow("Still to pay contractors", 5),
+    headerRow(["Contractor","Vendor","Contract total","Paid so far","Still to pay"]),
+    ...state.contracts.map(c => {
+      const paid = contractPaid(c.id);
+      const left = stillToPay(c.totalCents, paid);
+      return xRow([
+        xCell(c.name), xCell(c.vendor || ""),
+        xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String"),
+        xCell(xNum(paid), "Number"),
+        xCell(left == null ? "Set a contract total" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left != null && left > 0 ? "total" : null)
+      ]);
+    }),
+    xRow([
+      xCell("ALL CONTRACTORS", "String", "totaltxt"), xCell(""),
+      xCell(xNum(contractorsOutstanding().due), "Number", "total"),
+      xCell(xNum(contractorsOutstanding().paid), "Number", "total"),
+      xCell(xNum(Math.max(0, contractorsOutstanding().remaining)), "Number", "total")
+    ])
   ];
   const summaryBody = [
     sectionRow("Who owes whom — totals", 5),
@@ -1068,6 +1123,23 @@ function downloadExcel() {
     xRow([xCell(oweSentence("Trips", catBalance(buckets, "Trip")), "String", "oweline")]),
     blankRow(),
     ...pivotBlock("Who owes whom by category", whoHeader, whoRows),
+    ...pivotBlock("Still to pay contractors", ["Contractor","Vendor","Contract total","Paid so far","Still to pay"], [
+      ...state.contracts.map(c => {
+        const paid = contractPaid(c.id);
+        const left = stillToPay(c.totalCents, paid);
+        return xRow([
+          xCell(c.name), xCell(c.vendor || ""),
+          xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String"),
+          xCell(xNum(paid), "Number"),
+          xCell(left == null ? "Set a contract total" : xNum(Math.max(0, left)), left == null ? "String" : "Number")
+        ]);
+      }),
+      xRow([
+        xCell("ALL CONTRACTORS", "String", "totaltxt"), xCell(""),
+        totStyle(contractorsOutstanding().due), totStyle(contractorsOutstanding().paid),
+        totStyle(Math.max(0, contractorsOutstanding().remaining))
+      ])
+    ]),
     ...pivotBlock("Pivot: category × payer", ["Category", aName, bName, "Total spend ("+ledger+")"], [
       ...cats.map(cat => {
         const b = catBalance(buckets, cat);
@@ -1163,14 +1235,22 @@ function downloadExcel() {
   ];
 
   const payList = state.expenses.filter(e => (!from || e.date >= from) && (!to || e.date <= to)).slice().sort((a,b) => a.date.localeCompare(b.date));
-  const payHeader = ["Date","Category","Item","Description","Paid by","Split","Ledger amount ("+ledger+")","Original amount","Currency","ZAR booked","FX rate","FX date"];
-  const payDetail = payList.map(e => xRow([
+  const payHeader = ["Date","Category","Item","Description","Paid by","Split","Ledger amount ("+ledger+")","Original amount","Currency","ZAR booked","Contract total","Paid to contractor","Still to pay contractor","FX rate","FX date"];
+  const payDetail = payList.map(e => {
+    const con = e.kind === "contract" ? state.contracts.find(x => x.id === e.targetId) : null;
+    const paid = con ? contractPaid(con.id) : null;
+    const left = con ? stillToPay(con.totalCents, paid) : null;
+    return xRow([
     xCell(e.date), xCell(categoryLabel(e.kind)), xCell(itemName(e.kind, e.targetId)), xCell(e.description),
     xCell(nameOf(e.paidBy)), xCell(splitLabel(e)), xCell(xNum(ledgerCents(e)), "Number"),
     xCell(xNum(e.amountCents), "Number"), xCell(expenseCurrency(e)),
     xCell(e.zarCents != null ? xNum(e.zarCents) : "", e.zarCents != null ? "Number" : "String"),
+    xCell(con && con.totalCents != null ? xNum(con.totalCents) : "", con && con.totalCents != null ? "Number" : "String"),
+    xCell(paid != null ? xNum(paid) : "", paid != null ? "Number" : "String"),
+    xCell(left == null ? "" : xNum(Math.max(0, left)), left == null ? "String" : "Number"),
     xCell(e.fxRate != null ? Number(e.fxRate).toFixed(4) : ""), xCell(e.fxDate || "")
-  ]));
+  ]);
+  });
   const payPivotHeader = ["Category","Item","Payments", aName+" paid", bName+" paid", "Total ("+ledger+")", "ZAR booked"];
   const payPivotRows = [];
   const payByCat = {};
@@ -1328,9 +1408,15 @@ function renderReport() {
   ];
   const rows = kinds.map(k => {
     const b = balance(k.exp, k.xf);
-    if (!k.exp.length && !k.xf.length && k.key !== "overall") return "";
+    if (!k.exp.length && !k.xf.length && k.key !== "overall") {
+      const con = state.contracts.find(c => c.id === k.key);
+      if (!con) return "";
+    }
+    const con = state.contracts.find(c => c.id === k.key);
+    const left = con && con.totalCents != null ? stillToPay(con.totalCents, contractPaid(con.id)) : null;
+    const leftTxt = left == null ? "—" : (left <= 0 ? "Paid in full" : money(left));
     const line = b.even ? "Settled" : `${nameOf(b.debtor)} owes ${nameOf(b.creditor)} ${money(b.owed)}`;
-    return `<tr><td>${esc(k.label)}</td><td>${esc(money(b.total))}</td><td>${esc(nameOf("a"))} ${esc(money(b.paidA))}</td><td>${esc(nameOf("b"))} ${esc(money(b.paidB))}</td><td class="${b.even ? "credit" : "owe"}">${esc(line)}</td></tr>`;
+    return `<tr><td>${esc(k.label)}</td><td>${esc(money(b.total))}</td><td>${esc(nameOf("a"))} ${esc(money(b.paidA))}</td><td>${esc(nameOf("b"))} ${esc(money(b.paidB))}</td><td>${esc(leftTxt)}</td><td class="${b.even ? "credit" : "owe"}">${esc(line)}</td></tr>`;
   }).join("");
   const overall = balance(filterExp(null, null, from, to), filterXfer("overall", null, from, to));
   return `
@@ -1346,7 +1432,7 @@ function renderReport() {
     </div>
     <div class="card" style="overflow:auto">
       <table>
-        <thead><tr><th>Bucket</th><th>Spend</th><th>${esc(nameOf("a"))} paid</th><th>${esc(nameOf("b"))} paid</th><th>Balance</th></tr></thead>
+        <thead><tr><th>Bucket</th><th>Spend</th><th>${esc(nameOf("a"))} paid</th><th>${esc(nameOf("b"))} paid</th><th>Still to pay contractor</th><th>Between you</th></tr></thead>
         <tbody>${rows || `<tr><td colspan="5">Nothing in this range.</td></tr>`}</tbody>
       </table>
     </div>
