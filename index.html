@@ -101,10 +101,12 @@
     .btn.sm { padding: 7px 11px; font-size: .82rem; }
     .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 20px; }
     .list-row {
-      display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+      display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;
       padding: 12px 0; border-top: 1px solid var(--line);
     }
     .list-row:first-child { border-top: 0; }
+    .row-end { text-align: right; flex-shrink: 0; }
+    .row-acts { display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; }
     .progress { height: 6px; background: var(--paper); border-radius: 99px; overflow: hidden; margin: 10px 0 6px; }
     .progress > i { display: block; height: 100%; background: var(--navy); border-radius: 99px; }
     table { width: 100%; border-collapse: collapse; font-size: .92rem; }
@@ -372,36 +374,40 @@ function targetsFor(kind) {
 }
 
 function paymentDialog(preset) {
-  const kind = preset?.kind || "house";
+  const existing = preset?.id ? state.expenses.find(e => e.id === preset.id) : null;
+  const kind = existing?.kind || preset?.kind || "house";
+  const targetId = existing?.targetId || preset?.targetId || "";
   const targets = targetsFor(kind);
   const options = ["contract","house","trip"].map(k => `<option value="${k}" ${k===kind?"selected":""}>${k[0].toUpperCase()+k.slice(1)}</option>`).join("");
-  const tOpts = targets.map(t => `<option value="${esc(t.id)}" ${preset?.targetId===t.id?"selected":""}>${esc(t.name)}</option>`).join("");
+  const tOpts = targets.map(t => `<option value="${esc(t.id)}" ${targetId===t.id?"selected":""}>${esc(t.name)}</option>`).join("");
+  const paidBy = existing?.paidBy || "a";
   openDialog(`
-    <h2>Add payment</h2>
+    <h2>${existing ? "Edit payment" : "Add payment"}</h2>
     <form id="pay-form">
       <label>Type</label>
       <select name="kind">${options}</select>
       <label>Against</label>
       <select name="targetId">${tOpts || "<option value=''>Add a contract, house category, or trip first</option>"}</select>
       <label>Date</label>
-      <input type="date" name="date" value="${today()}" required />
+      <input type="date" name="date" value="${esc(existing?.date || today())}" required />
       <label>Description</label>
-      <input name="description" placeholder="Deposit, rates, hotel…" required />
+      <input name="description" placeholder="Deposit, rates, hotel…" required value="${esc(existing?.description || "")}" />
       <label>Amount</label>
-      <input name="amount" type="number" min="0" step="0.01" placeholder="0.00" required />
+      <input name="amount" type="number" min="0" step="0.01" placeholder="0.00" required value="${existing ? (existing.amountCents/100).toFixed(2) : ""}" />
       <label>Paid by</label>
       <select name="paidBy">
-        <option value="a">${esc(nameOf("a"))}</option>
-        <option value="b">${esc(nameOf("b"))}</option>
+        <option value="a" ${paidBy==="a"?"selected":""}>${esc(nameOf("a"))}</option>
+        <option value="b" ${paidBy==="b"?"selected":""}>${esc(nameOf("b"))}</option>
       </select>
       <label>Share for ${esc(nameOf("a"))} (%)</label>
       <div class="split">
-        <input name="splitA" type="number" min="0" max="100" value="50" />
+        <input name="splitA" type="number" min="0" max="100" value="${existing?.splitA ?? 50}" />
         <span class="muted">Default 50/50</span>
       </div>
       <div class="toolbar" style="margin-top:18px">
         <button class="btn" type="submit">Save payment</button>
         <button class="btn ghost" type="button" data-act="close">Cancel</button>
+        ${existing ? `<button class="btn danger" type="button" id="del-pay-btn">Delete</button>` : ""}
       </div>
     </form>
   `);
@@ -416,48 +422,66 @@ function paymentDialog(preset) {
     const cents = dollarsToCents(form.amount.value);
     if (cents == null || !form.targetId.value) return;
     const splitA = Math.max(0, Math.min(100, Number(form.splitA.value) || 50));
-    state.expenses.push({
-      id: uid(), kind: form.kind.value, targetId: form.targetId.value,
-      date: form.date.value, description: form.description.value.trim(),
-      amountCents: cents, paidBy: form.paidBy.value, splitA
-    });
+    const row = {
+      id: existing?.id || uid(),
+      kind: form.kind.value,
+      targetId: form.targetId.value,
+      date: form.date.value,
+      description: form.description.value.trim(),
+      amountCents: cents,
+      paidBy: form.paidBy.value,
+      splitA
+    };
+    if (existing) state.expenses = state.expenses.map(x => x.id === existing.id ? row : x);
+    else state.expenses.push(row);
+    save(); closeDialog(); render();
+  });
+  const del = document.getElementById("del-pay-btn");
+  if (del) del.addEventListener("click", () => {
+    if (!confirm("Delete this payment?")) return;
+    state.expenses = state.expenses.filter(x => x.id !== existing.id);
     save(); closeDialog(); render();
   });
 }
 
 function settleDialog(preset) {
+  const existing = preset?.id ? state.transfers.find(t => t.id === preset.id) : null;
+  const fromId = existing?.from || "a";
+  const toId = existing?.to || "b";
+  const scope = existing?.kind || "overall";
   openDialog(`
-    <h2>Settle up</h2>
+    <h2>${existing ? "Edit transfer" : "Settle up"}</h2>
     <p class="muted">Record a transfer so the balance updates.</p>
     <form id="settle-form">
       <label>Date</label>
-      <input type="date" name="date" value="${today()}" required />
+      <input type="date" name="date" value="${esc(existing?.date || today())}" required />
       <label>From</label>
       <select name="from">
-        <option value="a">${esc(nameOf("a"))}</option>
-        <option value="b">${esc(nameOf("b"))}</option>
+        <option value="a" ${fromId==="a"?"selected":""}>${esc(nameOf("a"))}</option>
+        <option value="b" ${fromId==="b"?"selected":""}>${esc(nameOf("b"))}</option>
       </select>
       <label>To</label>
       <select name="to">
-        <option value="b">${esc(nameOf("b"))}</option>
-        <option value="a">${esc(nameOf("a"))}</option>
+        <option value="b" ${toId==="b"?"selected":""}>${esc(nameOf("b"))}</option>
+        <option value="a" ${toId==="a"?"selected":""}>${esc(nameOf("a"))}</option>
       </select>
       <label>Amount</label>
-      <input name="amount" type="number" min="0" step="0.01" required />
+      <input name="amount" type="number" min="0" step="0.01" required value="${existing ? (existing.amountCents/100).toFixed(2) : ""}" />
       <label>Apply to</label>
       <select name="scope">
-        <option value="overall">Overall balance</option>
-        <option value="contract">A contract</option>
-        <option value="house">A house category</option>
-        <option value="trip">A trip</option>
+        <option value="overall" ${scope==="overall"?"selected":""}>Overall balance</option>
+        <option value="contract" ${scope==="contract"?"selected":""}>A contract</option>
+        <option value="house" ${scope==="house"?"selected":""}>A house category</option>
+        <option value="trip" ${scope==="trip"?"selected":""}>A trip</option>
       </select>
       <label>If scoped, pick one</label>
       <select name="targetId"><option value="">—</option></select>
       <label>Note</label>
-      <input name="notes" placeholder="Optional" />
+      <input name="notes" placeholder="Optional" value="${esc(existing?.notes || "")}" />
       <div class="toolbar" style="margin-top:18px">
         <button class="btn" type="submit">Save transfer</button>
         <button class="btn ghost" type="button" data-act="close">Cancel</button>
+        ${existing ? `<button class="btn danger" type="button" id="del-xfer-btn">Delete</button>` : ""}
       </div>
     </form>
   `);
@@ -465,7 +489,8 @@ function settleDialog(preset) {
   const fill = () => {
     const k = form.scope.value;
     const t = k === "overall" ? [] : targetsFor(k);
-    form.targetId.innerHTML = `<option value="">—</option>` + t.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+    const selected = existing?.targetId || "";
+    form.targetId.innerHTML = `<option value="">—</option>` + t.map(x => `<option value="${esc(x.id)}" ${selected===x.id?"selected":""}>${esc(x.name)}</option>`).join("");
   };
   form.scope.addEventListener("change", fill);
   fill();
@@ -473,12 +498,24 @@ function settleDialog(preset) {
     e.preventDefault();
     const cents = dollarsToCents(form.amount.value);
     if (cents == null || form.from.value === form.to.value) return;
-    state.transfers.push({
-      id: uid(), date: form.date.value, amountCents: cents,
-      from: form.from.value, to: form.to.value,
-      kind: form.scope.value, targetId: form.targetId.value || null,
+    const row = {
+      id: existing?.id || uid(),
+      date: form.date.value,
+      amountCents: cents,
+      from: form.from.value,
+      to: form.to.value,
+      kind: form.scope.value,
+      targetId: form.targetId.value || null,
       notes: form.notes.value.trim()
-    });
+    };
+    if (existing) state.transfers = state.transfers.map(x => x.id === existing.id ? row : x);
+    else state.transfers.push(row);
+    save(); closeDialog(); render();
+  });
+  const del = document.getElementById("del-xfer-btn");
+  if (del) del.addEventListener("click", () => {
+    if (!confirm("Delete this transfer?")) return;
+    state.transfers = state.transfers.filter(x => x.id !== existing.id);
     save(); closeDialog(); render();
   });
 }
@@ -530,12 +567,23 @@ function entityDialog(kind, existing) {
   });
   const del = document.getElementById("del-ent");
   if (del) del.addEventListener("click", () => {
-    if (!confirm("Delete this and keep its payments? Payments stay in the report unless you delete them too.")) return;
+    if (!confirm("Delete this? Payments against it will stay unless you delete those too.")) return;
+    if (confirm("Also delete the payments and transfers recorded against it?")) {
+      state.expenses = state.expenses.filter(x => !(x.kind === kind && x.targetId === existing.id));
+      state.transfers = state.transfers.filter(x => !(x.kind === kind && x.targetId === existing.id));
+    }
     if (kind === "contract") state.contracts = state.contracts.filter(x => x.id !== existing.id);
     if (kind === "house") state.house = state.house.filter(x => x.id !== existing.id);
     if (kind === "trip") state.trips = state.trips.filter(x => x.id !== existing.id);
     save(); closeDialog(); location.hash = "#/" + (kind === "house" ? "house" : kind === "trip" ? "trips" : "contracts");
   });
+}
+
+function rowActs(actEdit, actDel, id) {
+  return `<div class="row-acts">
+      <button type="button" class="btn ghost sm" data-act="${actEdit}" data-id="${esc(id)}">Edit</button>
+      <button type="button" class="btn ghost sm" data-act="${actDel}" data-id="${esc(id)}">Delete</button>
+    </div>`;
 }
 
 function expenseRows(list) {
@@ -546,9 +594,27 @@ function expenseRows(list) {
         <div>${esc(e.description)}</div>
         <div class="muted">${prettyDate(e.date)} · ${esc(nameOf(e.paidBy))} paid · split ${e.splitA}/${100-e.splitA}</div>
       </div>
-      <div class="amount">${esc(money(e.amountCents))}</div>
+      <div class="row-end">
+        <div class="amount">${esc(money(e.amountCents))}</div>
+        ${rowActs("edit-pay", "del-pay", e.id)}
+      </div>
     </div>
   `).join("");
+}
+
+function transferRows(list) {
+  if (!list.length) return "";
+  return `<div class="card" style="margin-top:14px"><h3>Transfers</h3>${list.slice().sort((a,b) => b.date.localeCompare(a.date)).map(t => `
+    <div class="list-row">
+      <div>
+        <div>${esc(nameOf(t.from))} → ${esc(nameOf(t.to))}${t.notes ? " · " + esc(t.notes) : ""}</div>
+        <div class="muted">${prettyDate(t.date)}</div>
+      </div>
+      <div class="row-end">
+        <div class="amount">${esc(money(t.amountCents))}</div>
+        ${rowActs("edit-xfer", "del-xfer", t.id)}
+      </div>
+    </div>`).join("")}</div>`;
 }
 
 function bucketCard(href, title, meta, bal, extra) {
@@ -586,11 +652,17 @@ function renderOverview() {
       ${recent.length ? recent.map(item => item._t === "pay" ? `
         <div class="list-row">
           <div><div>${esc(item.description)}</div><div class="muted">${prettyDate(item.date)} · ${esc(nameOf(item.paidBy))}</div></div>
-          <div class="amount">${esc(money(item.amountCents))}</div>
+          <div class="row-end">
+            <div class="amount">${esc(money(item.amountCents))}</div>
+            ${rowActs("edit-pay", "del-pay", item.id)}
+          </div>
         </div>` : `
         <div class="list-row">
           <div><div>Transfer</div><div class="muted">${prettyDate(item.date)} · ${esc(nameOf(item.from))} → ${esc(nameOf(item.to))}</div></div>
-          <div class="amount">${esc(money(item.amountCents))}</div>
+          <div class="row-end">
+            <div class="amount">${esc(money(item.amountCents))}</div>
+            ${rowActs("edit-xfer", "del-xfer", item.id)}
+          </div>
         </div>`).join("") : `<div class="empty">Nothing recorded yet.</div>`}
     </div>
   `;
@@ -648,7 +720,7 @@ function renderDetail(kind, id) {
       <button class="btn ghost" data-act="entity" data-kind="${kind}" data-id="${esc(id)}">Edit</button>
     </div>
     <div class="card"><h3>Payments</h3>${expenseRows(ex)}</div>
-    ${xf.length ? `<div class="card" style="margin-top:14px"><h3>Transfers</h3>${xf.map(t => `<div class="list-row"><div>${prettyDate(t.date)} · ${esc(nameOf(t.from))} → ${esc(nameOf(t.to))}</div><div class="amount">${esc(money(t.amountCents))}</div></div>`).join("")}</div>` : ""}
+    ${transferRows(xf)}
   `;
 }
 
@@ -684,6 +756,8 @@ function renderReport() {
         <tbody>${rows || `<tr><td colspan="5">Nothing in this range.</td></tr>`}</tbody>
       </table>
     </div>
+    <div class="card" style="margin-top:16px"><h3>All payments</h3>${expenseRows(filterExp(null, null, from, to))}</div>
+    ${transferRows(state.transfers.filter(t => (!from || t.date >= from) && (!to || t.date <= to)))}
   `;
 }
 
@@ -779,7 +853,19 @@ document.addEventListener("click", (e) => {
   const id = t.getAttribute("data-id");
   if (act === "close") closeDialog();
   if (act === "pay") paymentDialog({ kind, targetId: id });
+  if (act === "edit-pay") paymentDialog({ id });
+  if (act === "del-pay") {
+    if (!confirm("Delete this payment?")) return;
+    state.expenses = state.expenses.filter(x => x.id !== id);
+    save(); render();
+  }
   if (act === "settle") settleDialog();
+  if (act === "edit-xfer") settleDialog({ id });
+  if (act === "del-xfer") {
+    if (!confirm("Delete this transfer?")) return;
+    state.transfers = state.transfers.filter(x => x.id !== id);
+    save(); render();
+  }
   if (act === "entity") {
     const list = kind === "contract" ? state.contracts : kind === "house" ? state.house : state.trips;
     entityDialog(kind, id ? list.find(x => x.id === id) : null);
