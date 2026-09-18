@@ -144,7 +144,8 @@
     textarea { min-height: 72px; resize: vertical; }
     .split { display: flex; gap: 8px; align-items: center; }
     .empty { padding: 28px 8px; color: var(--muted); }
-    .danger-text { color: var(--danger); font-size: .88rem; }
+    .fx-box { background: var(--paper); border-radius: 10px; padding: 12px; margin-top: 12px; font-size: .9rem; }
+    .fx-box strong { font-variant-numeric: tabular-nums; }
     @media (min-width: 860px) {
       .sidebar { display: flex; }
       .bottom { display: none; }
@@ -176,6 +177,8 @@
 
 <script>
 const KEY = "halves-ledger-v1";
+const FX_KEY = "halves-fx-v1";
+const CURRENCIES = ["ZAR","USD","EUR","GBP","AUD","CAD","NZD"];
 const ICONS = {
   home: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5z"/></svg>',
   scroll: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 6h11v13a2 2 0 0 1-2 2H8a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2h12"/><path d="M8 10h8M8 14h6"/></svg>',
@@ -187,7 +190,7 @@ const ICONS = {
 
 const DEMO = {
   people: { a: { id: "a", name: "Alex" }, b: { id: "b", name: "Sam" } },
-  settings: { propertyName: "Willow House", currency: "USD" },
+  settings: { propertyName: "Willow House", currency: "ZAR" },
   contracts: [
     { id: "c-solar", name: "Solar array", vendor: "Helio & Co.", totalCents: 1840000, notes: "14.2 kW rooftop. Final invoice on commissioning.", createdAt: "2026-03-01T10:00:00.000Z" },
     { id: "c-drive", name: "Driveway reseal", vendor: "PaveRight", totalCents: 280000, notes: "Full reseal, April 2026.", createdAt: "2026-04-02T10:00:00.000Z" }
@@ -199,8 +202,8 @@ const DEMO = {
     { id: "h-maint", name: "Maintenance", notes: "Repairs and upkeep.", createdAt: "2026-01-01T10:00:00.000Z" }
   ],
   trips: [
-    { id: "t-or", name: "Oregon Coast", location: "Cannon Beach", startDate: "2026-05-12", endDate: "2026-05-16", notes: "Lodge, meals, hiking.", createdAt: "2026-04-20T10:00:00.000Z" },
-    { id: "t-mtl", name: "Montreal", location: "Montreal, QC", startDate: "2026-07-03", endDate: "2026-07-06", notes: "City break.", createdAt: "2026-05-28T10:00:00.000Z" }
+    { id: "t-or", name: "Oregon Coast", location: "Cannon Beach", startDate: "2026-05-12", endDate: "2026-05-16", notes: "Lodge, meals, hiking.", currency: "USD", createdAt: "2026-04-20T10:00:00.000Z" },
+    { id: "t-mtl", name: "Montreal", location: "Montreal, QC", startDate: "2026-07-03", endDate: "2026-07-06", notes: "City break.", currency: "CAD", createdAt: "2026-05-28T10:00:00.000Z" }
   ],
   expenses: [
     { id:"e1", kind:"contract", targetId:"c-solar", date:"2026-03-12", description:"Deposit", amountCents:460000, paidBy:"a", splitA:50 },
@@ -233,7 +236,7 @@ const DEMO = {
 function emptyLedger() {
   return {
     people: { a: { id: "a", name: "Alex" }, b: { id: "b", name: "Sam" } },
-    settings: { propertyName: "Home", currency: "USD" },
+    settings: { propertyName: "Home", currency: "ZAR" },
     contracts: [], house: [], trips: [], expenses: [], transfers: []
   };
 }
@@ -261,6 +264,103 @@ function save() {
 }
 
 let state = load();
+let fx = loadFx();
+
+function loadFx() {
+  try {
+    const raw = localStorage.getItem(FX_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && d.rates) return d;
+    }
+  } catch {}
+  return { rates: { ZAR: 1 }, date: "", fetchedAt: "", source: "" };
+}
+function saveFx() {
+  localStorage.setItem(FX_KEY, JSON.stringify(fx));
+}
+
+function currencyOpts(selected) {
+  return CURRENCIES.map(c => `<option value="${c}" ${c===selected?"selected":""}>${c}</option>`).join("");
+}
+
+function moneyIn(cents, currency) {
+  const code = currency || state.settings.currency || "ZAR";
+  try {
+    return new Intl.NumberFormat(code === "ZAR" ? "en-ZA" : undefined, { style: "currency", currency: code }).format((cents || 0) / 100);
+  } catch {
+    return ((cents || 0) / 100).toFixed(2) + " " + code;
+  }
+}
+function moneyZar(cents) { return moneyIn(cents, "ZAR"); }
+
+function tripOf(id) { return state.trips.find(t => t.id === id); }
+function expenseCurrency(e) {
+  if (e.currency) return e.currency;
+  if (e.kind === "trip") return tripOf(e.targetId)?.currency || state.settings.currency;
+  return state.settings.currency || "ZAR";
+}
+function zarPerUnit(currency) {
+  if (!currency || currency === "ZAR") return 1;
+  const r = Number(fx.rates[currency]);
+  return r > 0 ? r : null;
+}
+function toZarCents(amountCents, currency, rateOverride) {
+  if (!currency || currency === "ZAR") return amountCents;
+  const r = rateOverride != null && rateOverride !== "" ? Number(rateOverride) : zarPerUnit(currency);
+  if (!r || !isFinite(r)) return null;
+  return Math.round(amountCents * r);
+}
+function ledgerCents(e) {
+  const from = expenseCurrency(e);
+  const to = state.settings.currency || "ZAR";
+  if (from === to) return e.amountCents;
+  const zar = e.zarCents != null ? e.zarCents : toZarCents(e.amountCents, from, e.fxRate);
+  if (zar == null) return e.amountCents;
+  if (to === "ZAR") return zar;
+  const rTo = zarPerUnit(to);
+  if (!rTo) return e.amountCents;
+  return Math.round(zar / rTo);
+}
+
+async function fetchFx() {
+  const setRatesFromUsd = (usdRates, date, source) => {
+    const usdZar = Number(usdRates.ZAR);
+    if (!usdZar) throw new Error("no ZAR");
+    const rates = { ZAR: 1, USD: usdZar };
+    for (const c of CURRENCIES) {
+      if (c === "ZAR" || c === "USD") continue;
+      const usdPer = Number(usdRates[c]);
+      if (usdPer > 0) rates[c] = usdZar / usdPer;
+    }
+    fx = { rates, date: date || today(), fetchedAt: new Date().toISOString(), source };
+    saveFx();
+  };
+  try {
+    const res = await fetch("https://api.frankfurter.app/latest?from=USD");
+    if (!res.ok) throw new Error("frankfurter");
+    const data = await res.json();
+    setRatesFromUsd(data.rates, data.date, "Frankfurter (ECB)");
+    return true;
+  } catch {
+    try {
+      const res = await fetch("https://open.er-api.com/v6/latest/USD");
+      if (!res.ok) throw new Error("er-api");
+      const data = await res.json();
+      setRatesFromUsd(data.rates || data.conversion_rates, data.time_last_update_utc, "open.er-api.com");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function fxLine(currency) {
+  if (!currency || currency === "ZAR") return "Already rand.";
+  const r = zarPerUnit(currency);
+  if (!r) return "No rate yet — enter one, or refresh in Settings.";
+  return `1 ${currency} = ${moneyZar(Math.round(r * 100)).replace("R","R ").trim()} (${fx.date || "latest"})`;
+}
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
@@ -271,11 +371,7 @@ function today() {
   return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
 }
 function money(cents) {
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: state.settings.currency || "USD" }).format((cents || 0) / 100);
-  } catch {
-    return ((cents || 0) / 100).toFixed(2);
-  }
+  return moneyIn(cents, state.settings.currency || "ZAR");
 }
 function prettyDate(iso) {
   if (!iso) return "";
@@ -292,9 +388,10 @@ function dollarsToCents(v) {
 function balance(expenses, transfers) {
   let total = 0, paidA = 0, paidB = 0, shareA = 0;
   for (const e of expenses) {
-    total += e.amountCents;
-    if (e.paidBy === "a") paidA += e.amountCents; else paidB += e.amountCents;
-    shareA += Math.round((e.amountCents * (e.splitA ?? 50)) / 100);
+    const cents = ledgerCents(e);
+    total += cents;
+    if (e.paidBy === "a") paidA += cents; else paidB += cents;
+    shareA += Math.round((cents * (e.splitA ?? 50)) / 100);
   }
   let netA = paidA - shareA;
   for (const t of transfers) {
@@ -381,6 +478,8 @@ function paymentDialog(preset) {
   const options = ["contract","house","trip"].map(k => `<option value="${k}" ${k===kind?"selected":""}>${k[0].toUpperCase()+k.slice(1)}</option>`).join("");
   const tOpts = targets.map(t => `<option value="${esc(t.id)}" ${targetId===t.id?"selected":""}>${esc(t.name)}</option>`).join("");
   const paidBy = existing?.paidBy || "a";
+  const startCcy = existing?.currency || (kind === "trip" ? (tripOf(targetId)?.currency || "USD") : (state.settings.currency || "ZAR"));
+  const startRate = existing?.fxRate != null ? existing.fxRate : (zarPerUnit(startCcy) ?? "");
   openDialog(`
     <h2>${existing ? "Edit payment" : "Add payment"}</h2>
     <form id="pay-form">
@@ -394,6 +493,14 @@ function paymentDialog(preset) {
       <input name="description" placeholder="Deposit, rates, hotel…" required value="${esc(existing?.description || "")}" />
       <label>Amount</label>
       <input name="amount" type="number" min="0" step="0.01" placeholder="0.00" required value="${existing ? (existing.amountCents/100).toFixed(2) : ""}" />
+      <div id="fx-fields">
+        <label>Currency</label>
+        <select name="currency">${currencyOpts(startCcy)}</select>
+        <label>ZAR per 1 unit (live rate, you can override)</label>
+        <input name="fxRate" type="number" min="0" step="0.0001" value="${startRate}" />
+        <div class="fx-box" id="fx-preview"></div>
+        <button class="btn ghost sm" type="button" id="fx-refresh" style="margin-top:8px">Refresh live rate</button>
+      </div>
       <label>Paid by</label>
       <select name="paidBy">
         <option value="a" ${paidBy==="a"?"selected":""}>${esc(nameOf("a"))}</option>
@@ -412,16 +519,78 @@ function paymentDialog(preset) {
     </form>
   `);
   const form = document.getElementById("pay-form");
+  const syncFx = () => {
+    const tripCcy = tripOf(form.targetId.value)?.currency;
+    if (form.kind.value === "trip" && tripCcy && !existing) form.currency.value = tripCcy;
+    const ccy = form.currency.value;
+    if (!form.fxRate.value || form.kind.value === "trip") {
+      const live = zarPerUnit(ccy);
+      if (live && (form.kind.value !== "trip" || !existing || !form.fxRate.dataset.locked)) {
+        if (!existing) form.fxRate.value = live.toFixed(4);
+      }
+    }
+    const cents = dollarsToCents(form.amount.value) || 0;
+    const rate = Number(form.fxRate.value);
+    const zar = toZarCents(cents, ccy, rate);
+    const box = document.getElementById("fx-preview");
+    const fields = document.getElementById("fx-fields");
+    fields.style.display = form.kind.value === "trip" || ccy !== "ZAR" ? "block" : "block";
+    if (ccy === "ZAR") {
+      box.innerHTML = `Coded in rand: <strong>${esc(moneyZar(cents))}</strong>`;
+    } else if (zar == null) {
+      box.innerHTML = `No ZAR rate for ${esc(ccy)}. Refresh the live rate or type one.`;
+    } else {
+      box.innerHTML = `${esc(moneyIn(cents, ccy))} → <strong>${esc(moneyZar(zar))}</strong><div class="muted">${esc(fxLine(ccy))}. This ZAR amount is stored on save.</div>`;
+    }
+  };
   form.kind.addEventListener("change", () => {
     const k = form.kind.value;
     const t = targetsFor(k);
     form.targetId.innerHTML = t.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("") || "<option value=''>None yet</option>";
+    if (k === "trip") {
+      const tc = tripOf(form.targetId.value)?.currency;
+      if (tc) form.currency.value = tc;
+    } else {
+      form.currency.value = state.settings.currency || "ZAR";
+    }
+    const live = zarPerUnit(form.currency.value);
+    if (live) form.fxRate.value = live.toFixed(4);
+    syncFx();
   });
+  form.targetId.addEventListener("change", () => {
+    if (form.kind.value === "trip") {
+      const tc = tripOf(form.targetId.value)?.currency;
+      if (tc) {
+        form.currency.value = tc;
+        const live = zarPerUnit(tc);
+        if (live) form.fxRate.value = live.toFixed(4);
+      }
+    }
+    syncFx();
+  });
+  form.amount.addEventListener("input", syncFx);
+  form.currency.addEventListener("change", () => {
+    const live = zarPerUnit(form.currency.value);
+    if (live) form.fxRate.value = live.toFixed(4);
+    syncFx();
+  });
+  form.fxRate.addEventListener("input", () => { form.fxRate.dataset.locked = "1"; syncFx(); });
+  document.getElementById("fx-refresh").addEventListener("click", async () => {
+    const ok = await fetchFx();
+    const live = zarPerUnit(form.currency.value);
+    if (live) { form.fxRate.value = live.toFixed(4); delete form.fxRate.dataset.locked; }
+    if (!ok && !live) alert("Could not fetch a live rate. Type the bank rate yourself.");
+    syncFx();
+  });
+  syncFx();
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const cents = dollarsToCents(form.amount.value);
     if (cents == null || !form.targetId.value) return;
     const splitA = Math.max(0, Math.min(100, Number(form.splitA.value) || 50));
+    const ccy = form.currency.value || state.settings.currency;
+    const rate = Number(form.fxRate.value);
+    const zar = toZarCents(cents, ccy, rate);
     const row = {
       id: existing?.id || uid(),
       kind: form.kind.value,
@@ -430,7 +599,11 @@ function paymentDialog(preset) {
       description: form.description.value.trim(),
       amountCents: cents,
       paidBy: form.paidBy.value,
-      splitA
+      splitA,
+      currency: ccy,
+      fxRate: ccy === "ZAR" ? 1 : (rate || null),
+      fxDate: fx.date || today(),
+      zarCents: zar
     };
     if (existing) state.expenses = state.expenses.map(x => x.id === existing.id ? row : x);
     else state.expenses.push(row);
@@ -533,6 +706,9 @@ function entityDialog(kind, existing) {
         <label>Contract total (optional)</label><input name="total" type="number" min="0" step="0.01" value="${existing?.totalCents != null ? (existing.totalCents/100).toFixed(2) : ""}" />` : ""}
       ${kind === "house" ? `<label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
       ${isTrip ? `<label>Location</label><input name="location" value="${esc(existing?.location || "")}" />
+        <label>Trip currency</label>
+        <select name="currency">${currencyOpts(existing?.currency || "USD")}</select>
+        <p class="muted">Payments on this trip are entered in this currency and coded to rand at the live rate (you can override per payment).</p>
         <label>Start</label><input type="date" name="startDate" value="${esc(existing?.startDate || "")}" />
         <label>End</label><input type="date" name="endDate" value="${esc(existing?.endDate || "")}" />
         <label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
@@ -559,7 +735,7 @@ function entityDialog(kind, existing) {
       if (existing) state.house = state.house.map(x => x.id === existing.id ? row : x);
       else state.house.push(row);
     } else {
-      const row = { id: existing?.id || uid(), name, location: form.location.value.trim(), startDate: form.startDate.value, endDate: form.endDate.value, notes: form.notes.value.trim(), createdAt: existing?.createdAt || new Date().toISOString() };
+      const row = { id: existing?.id || uid(), name, location: form.location.value.trim(), startDate: form.startDate.value, endDate: form.endDate.value, notes: form.notes.value.trim(), currency: form.currency.value || "USD", createdAt: existing?.createdAt || new Date().toISOString() };
       if (existing) state.trips = state.trips.map(x => x.id === existing.id ? row : x);
       else state.trips.push(row);
     }
@@ -592,10 +768,11 @@ function expenseRows(list) {
     <div class="list-row">
       <div>
         <div>${esc(e.description)}</div>
-        <div class="muted">${prettyDate(e.date)} · ${esc(nameOf(e.paidBy))} paid · split ${e.splitA}/${100-e.splitA}</div>
+        <div class="muted">${prettyDate(e.date)} · ${esc(nameOf(e.paidBy))} paid · split ${e.splitA}/${100-e.splitA}${expenseCurrency(e) && expenseCurrency(e) !== (state.settings.currency||"ZAR") ? " · " + moneyIn(e.amountCents, expenseCurrency(e)) : ""}</div>
+        ${expenseCurrency(e) !== "ZAR" && (e.zarCents != null || toZarCents(e.amountCents, expenseCurrency(e), e.fxRate) != null) ? `<div class="muted">${esc(moneyZar(e.zarCents != null ? e.zarCents : toZarCents(e.amountCents, expenseCurrency(e), e.fxRate)))}${e.fxRate ? " at " + Number(e.fxRate).toFixed(4) + " / " + expenseCurrency(e) : ""}</div>` : ""}
       </div>
       <div class="row-end">
-        <div class="amount">${esc(money(e.amountCents))}</div>
+        <div class="amount">${esc(money(ledgerCents(e)))}</div>
         ${rowActs("edit-pay", "del-pay", e.id)}
       </div>
     </div>
@@ -653,14 +830,14 @@ function renderOverview() {
         <div class="list-row">
           <div><div>${esc(item.description)}</div><div class="muted">${prettyDate(item.date)} · ${esc(nameOf(item.paidBy))}</div></div>
           <div class="row-end">
-            <div class="amount">${esc(money(item.amountCents))}</div>
+            <div class="amount">${esc(money(item._t === "pay" ? ledgerCents(item) : item.amountCents))}</div>
             ${rowActs("edit-pay", "del-pay", item.id)}
           </div>
         </div>` : `
         <div class="list-row">
           <div><div>Transfer</div><div class="muted">${prettyDate(item.date)} · ${esc(nameOf(item.from))} → ${esc(nameOf(item.to))}</div></div>
           <div class="row-end">
-            <div class="amount">${esc(money(item.amountCents))}</div>
+            <div class="amount">${esc(money(item._t === "pay" ? ledgerCents(item) : item.amountCents))}</div>
             ${rowActs("edit-xfer", "del-xfer", item.id)}
           </div>
         </div>`).join("") : `<div class="empty">Nothing recorded yet.</div>`}
@@ -677,7 +854,11 @@ function renderList(kind) {
   const cards = cfg.items.map(item => {
     const bal = balance(filterExp(kind, item.id), filterXfer(kind, item.id));
     let meta = item.vendor || item.location || item.notes || "";
-    if (kind === "trip" && item.startDate) meta = [item.location, prettyDate(item.startDate) + (item.endDate ? " – " + prettyDate(item.endDate) : "")].filter(Boolean).join(" · ");
+    if (kind === "trip") {
+      const ccy = item.currency || "ZAR";
+      const dates = item.startDate ? prettyDate(item.startDate) + (item.endDate ? " – " + prettyDate(item.endDate) : "") : "";
+      meta = [item.location, ccy, dates].filter(Boolean).join(" · ");
+    }
     let extra = "";
     if (kind === "contract" && item.totalCents) {
       const pct = Math.min(100, Math.round((bal.total / item.totalCents) * 100));
@@ -711,7 +892,7 @@ function renderDetail(kind, id) {
   return `
     <div class="page-kicker"><a href="#${back}">← ${kind === "trip" ? "Trips" : kind === "house" ? "House" : "Contracts"}</a></div>
     <h1 class="page-title">${esc(item.name)}</h1>
-    <p class="lede">${esc(item.vendor || item.location || item.notes || "")}</p>
+    <p class="lede">${esc(item.vendor || item.location || item.notes || "")}${kind === "trip" ? ` · Spend in ${esc(item.currency || "ZAR")}, coded to rand.` : ""}</p>
     ${extra}
     <p>${whoLine(bal)}</p>
     <div class="toolbar">
@@ -772,10 +953,22 @@ function renderSettings() {
       <input name="b" value="${esc(nameOf("b"))}" />
       <label>House / property name</label>
       <input name="property" value="${esc(state.settings.propertyName)}" />
-      <label>Currency</label>
-      <select name="currency">${["USD","EUR","GBP","AUD","CAD","ZAR","NZD"].map(c => `<option ${state.settings.currency===c?"selected":""}>${c}</option>`).join("")}</select>
+      <label>Ledger currency</label>
+      <select name="currency">${currencyOpts(state.settings.currency || "ZAR")}</select>
+      <p class="muted">House and contract costs use this. Trip costs in other currencies are converted into this using the ZAR rate.</p>
       <div class="toolbar" style="margin-top:16px"><button class="btn" type="submit">Save</button></div>
     </form>
+    <div class="card" style="margin-top:16px;max-width:520px">
+      <h3>Live rates into rand</h3>
+      <p class="muted">${fx.source ? esc(fx.source) + (fx.date ? " · " + esc(fx.date) : "") : "Not fetched yet. Needs an internet connection."}</p>
+      <table>
+        <thead><tr><th>Currency</th><th>ZAR per 1</th></tr></thead>
+        <tbody>
+          ${CURRENCIES.filter(c => c !== "ZAR").map(c => `<tr><td>${c}</td><td>${zarPerUnit(c) ? Number(zarPerUnit(c)).toFixed(4) : "—"}</td></tr>`).join("")}
+        </tbody>
+      </table>
+      <div class="toolbar"><button class="btn ghost" type="button" data-act="fx-refresh">Refresh rates</button></div>
+    </div>
     <div class="card" style="margin-top:16px;max-width:520px">
       <h3>Backup</h3>
       <p class="muted">This file stores data in this browser only. Export a copy if you care about it.</p>
@@ -800,7 +993,7 @@ function render() {
   document.getElementById("bottom-nav").innerHTML = navHtml(active === "/" ? "/" : "/" + root);
   document.getElementById("side-property").textContent = state.settings.propertyName || "Household ledger";
   const overall = balance(state.expenses, state.transfers);
-  document.getElementById("side-balance").innerHTML = overall.even ? "Settled" : `${esc(nameOf(overall.debtor))} owes ${esc(money(overall.owed))}`;
+  document.getElementById("side-balance").innerHTML = (overall.even ? "Settled" : `${esc(nameOf(overall.debtor))} owes ${esc(money(overall.owed))}`) + (fx.date ? `<div style="margin-top:8px">ZAR rates ${esc(fx.date)}</div>` : "");
   let html = "";
   if (!root) html = renderOverview();
   else if (root === "contracts" && id) html = renderDetail("contract", id);
@@ -870,6 +1063,12 @@ document.addEventListener("click", (e) => {
     const list = kind === "contract" ? state.contracts : kind === "house" ? state.house : state.trips;
     entityDialog(kind, id ? list.find(x => x.id === id) : null);
   }
+  if (act === "fx-refresh") {
+    fetchFx().then(ok => {
+      if (!ok) alert("Could not reach the rate service. Check the internet connection, or type a rate on the payment.");
+      render();
+    });
+  }
   if (act === "reprint") render();
   if (act === "export") {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
@@ -888,6 +1087,7 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDialog(); });
 window.addEventListener("hashchange", render);
 render();
+fetchFx().then(ok => { if (ok) render(); });
 </script>
 </body>
 </html>
