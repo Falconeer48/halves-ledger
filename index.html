@@ -978,28 +978,47 @@ function categoryLabel(kind) {
   return { contract: "Contract", house: "House", trip: "Trip", overall: "Overall" }[kind] || kind || "";
 }
 function xNum(cents) { return ((cents || 0) / 100).toFixed(2); }
+function band(cat, total) {
+  if (total) return { t: "totaltxt", n: "total" };
+  const c = String(cat || "");
+  if (/grand total|all contractors|overall total/i.test(c)) return { t: "totaltxt", n: "total" };
+  if (/contract/i.test(c)) return { t: "txtC", n: "numC" };
+  if (/house/i.test(c)) return { t: "txtH", n: "numH" };
+  if (/trip/i.test(c)) return { t: "txtT", n: "numT" };
+  if (/overall/i.test(c)) return { t: "txtO", n: "numO" };
+  return { t: "txtN", n: "numN" };
+}
+function tx(v, cat, total) { return xCell(v, "String", band(cat, total).t); }
+function nr(v, cat, total) { return xCell(v, "Number", band(cat, total).n); }
 function xCell(value, type, style) {
   if (type === "Number") {
     const n = value == null || value === "" ? "" : String(value);
-    if (n === "") return `<Cell><Data ss:Type="String"></Data></Cell>`;
+    if (n === "") return `<Cell ss:StyleID="${style || "txtN"}"><Data ss:Type="String"></Data></Cell>`;
     return `<Cell ss:StyleID="${style || "money"}"><Data ss:Type="Number">${n}</Data></Cell>`;
   }
-  return `<Cell${style ? ` ss:StyleID="${style}"` : ""}><Data ss:Type="String">${esc(value ?? "")}</Data></Cell>`;
+  return `<Cell ss:StyleID="${style || "txtN"}"><Data ss:Type="String">${esc(value ?? "")}</Data></Cell>`;
 }
 function xRow(cells) { return `<Row>${cells.join("")}</Row>`; }
 function xSheet(name, bodyRows) {
   const safe = String(name).replace(/[\\/*?:\[\]]/g, " ").slice(0, 31);
-  return `<Worksheet ss:Name="${esc(safe)}"><Table>${bodyRows.join("")}</Table></Worksheet>`;
+  return `<Worksheet ss:Name="${esc(safe)}">
+<Table>
+<Column ss:Width="160"/>
+<Column ss:Width="130" ss:Span="16"/>
+${bodyRows.join("")}
+</Table>
+<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><DoNotDisplayGridlines/></WorksheetOptions>
+</Worksheet>`;
 }
 function headerRow(cols) {
   return xRow(cols.map(h => xCell(h, "String", "header")));
 }
-function sectionRow(text, span) {
-  return `<Row><Cell ss:StyleID="section" ss:MergeAcross="${Math.max(0, (span || 8) - 1)}"><Data ss:Type="String">${esc(text)}</Data></Cell></Row>`;
+function sectionRow(text, span, style) {
+  return `<Row><Cell ss:StyleID="${style || "section"}" ss:MergeAcross="${Math.max(0, (span || 8) - 1)}"><Data ss:Type="String">${esc(text)}</Data></Cell></Row>`;
 }
 function blankRow() { return `<Row></Row>`; }
-function pivotBlock(title, headers, rows) {
-  return [sectionRow(title, headers.length), headerRow(headers), ...rows, blankRow()];
+function pivotBlock(title, headers, rows, tone) {
+  return [sectionRow(title, headers.length, tone), headerRow(headers), ...rows, blankRow()];
 }
 function oweSentence(label, b) {
   if (!b || b.even) return `${label}: Settled — nobody owes anyone`;
@@ -1036,13 +1055,13 @@ function downloadExcel() {
     const still = g.totalCents != null ? Math.max(0, g.totalCents - b.total) : "";
     const st = style || null;
     sumDetail.push(xRow([
-      xCell(g.cat, "String", st ? "totaltxt" : null), xCell(g.name, "String", st ? "totaltxt" : null),
-      xCell(g.exp.length, "Number", st), xCell(xNum(b.total), "Number", st),
-      xCell(xNum(b.paidA), "Number", st), xCell(xNum(b.paidB), "Number", st),
-      xCell(xNum(b.shareA), "Number", st), xCell(xNum(b.shareB), "Number", st),
-      xCell(oweText(b), "String", st ? "totaltxt" : null), xCell(xNum(b.owed), "Number", st),
-      xCell(g.totalCents != null ? xNum(g.totalCents) : "", g.totalCents != null ? "Number" : "String", st),
-      xCell(still === "" ? "" : xNum(still), still === "" ? "String" : "Number", st)
+      tx(g.cat, g.cat, st), tx(g.name, g.cat, st),
+      nr(g.exp.length, g.cat, st), nr(xNum(b.total), g.cat, st),
+      nr(xNum(b.paidA), g.cat, st), nr(xNum(b.paidB), g.cat, st),
+      nr(xNum(b.shareA), g.cat, st), nr(xNum(b.shareB), g.cat, st),
+      tx(oweText(b), g.cat, st), nr(xNum(b.owed), g.cat, st),
+      xCell(g.totalCents != null ? xNum(g.totalCents) : "", g.totalCents != null ? "Number" : "String", g.totalCents != null ? band(g.cat, st).n : band(g.cat, st).t),
+      xCell(still === "" ? "" : xNum(still), still === "" ? "String" : "Number", still === "" ? band(g.cat, st).t : band(g.cat, st).n)
     ]));
   };
   buckets.filter(g => g.cat !== "Overall" && (g.exp.length || g.xf.length || g.totalCents)).forEach(g => addSum(g));
@@ -1053,9 +1072,9 @@ function downloadExcel() {
     const xf = list.flatMap(g => g.xf);
     const b = balance(exp, xf);
     catPivotRows.push(xRow([
-      xCell(cat), xCell(list.filter(g => g.exp.length || g.xf.length).length, "Number"),
-      xCell(exp.length, "Number"), totStyle(b.total), totStyle(b.paidA), totStyle(b.paidB),
-      totStyle(b.shareA), totStyle(b.shareB), xCell(oweText(b), "String", "totaltxt"), totStyle(b.owed)
+      tx(cat, cat), nr(list.filter(g => g.exp.length || g.xf.length).length, cat),
+      nr(exp.length, cat), nr(xNum(b.total), cat), nr(xNum(b.paidA), cat), nr(xNum(b.paidB), cat),
+      nr(xNum(b.shareA), cat), nr(xNum(b.shareB), cat), tx(oweText(b), cat), nr(xNum(b.owed), cat)
     ]));
   }
   const overallB = buckets.find(g => g.cat === "Overall")?.bal || balance([], []);
@@ -1070,13 +1089,14 @@ function downloadExcel() {
   const catPivotHeader = ["Category","Items","Payments","Spend ("+ledger+")", aName+" paid", bName+" paid", aName+" share", bName+" share", "Who owes", "Amount owed ("+ledger+")"];
   const whoHeader = ["Category","Status","Who owes","Owes whom","Amount owed ("+ledger+")"];
   const whoLineRow = (label, b, total) => {
-    const st = total ? "totaltxt" : null;
-    const ns = total ? "total" : null;
+    const open = b && !b.even;
+    const ts = total ? "totaltxt" : (open ? "oweOpen" : "oweSettled");
+    const ns = total ? "total" : (open ? "oweOpenN" : "oweSettledN");
     return xRow([
-      xCell(label, "String", st),
-      xCell(b.even ? "Settled" : "Open", "String", st),
-      xCell(b.even ? "—" : nameOf(b.debtor), "String", st),
-      xCell(b.even ? "—" : nameOf(b.creditor), "String", st),
+      xCell(label, "String", ts),
+      xCell(b.even ? "Settled" : "Open", "String", ts),
+      xCell(b.even ? "—" : nameOf(b.debtor), "String", ts),
+      xCell(b.even ? "—" : nameOf(b.creditor), "String", ts),
       xCell(xNum(b.owed), "Number", ns)
     ]);
   };
@@ -1087,25 +1107,25 @@ function downloadExcel() {
     whoLineRow("OVERALL TOTAL", overallB, true)
   ];
   const whoBody = [
-    sectionRow("Who owes whom", 5),
+    sectionRow("Who owes whom", 5, "sectionWho"),
     xRow([xCell(oweSentence("Overall", overallB), "String", "owehead")]),
-    xRow([xCell(oweSentence("Contracts", catBalance(buckets, "Contract")), "String", "oweline")]),
-    xRow([xCell(oweSentence("House", catBalance(buckets, "House")), "String", "oweline")]),
-    xRow([xCell(oweSentence("Trips", catBalance(buckets, "Trip")), "String", "oweline")]),
+    xRow([xCell(oweSentence("Contracts", catBalance(buckets, "Contract")), "String", catBalance(buckets, "Contract").even ? "oweSettled" : "oweOpen")]),
+    xRow([xCell(oweSentence("House", catBalance(buckets, "House")), "String", catBalance(buckets, "House").even ? "oweSettled" : "oweOpen")]),
+    xRow([xCell(oweSentence("Trips", catBalance(buckets, "Trip")), "String", catBalance(buckets, "Trip").even ? "oweSettled" : "oweOpen")]),
     blankRow(),
     headerRow(whoHeader),
     ...whoRows,
     blankRow(),
-    sectionRow("Still to pay contractors", 5),
+    sectionRow("Still to pay contractors", 5, "sectionStill"),
     headerRow(["Contractor","Vendor","Contract total","Paid so far","Still to pay"]),
     ...state.contracts.map(c => {
       const paid = contractPaid(c.id);
       const left = stillToPay(c.totalCents, paid);
       return xRow([
-        xCell(c.name), xCell(c.vendor || ""),
-        xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String"),
-        xCell(xNum(paid), "Number"),
-        xCell(left == null ? "Set a contract total" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left != null && left > 0 ? "total" : null)
+        xCell(c.name, "String", "txtC"), xCell(c.vendor || "", "String", "txtC"),
+        xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String", c.totalCents != null ? "numC" : "txtC"),
+        xCell(xNum(paid), "Number", "numC"),
+        xCell(left == null ? "Set a contract total" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC"))
       ]);
     }),
     xRow([
@@ -1116,39 +1136,39 @@ function downloadExcel() {
     ])
   ];
   const summaryBody = [
-    sectionRow("Who owes whom — totals", 5),
+    sectionRow("Who owes whom — totals", 5, "sectionWho"),
     xRow([xCell(oweSentence("Overall", overallB), "String", "owehead")]),
-    xRow([xCell(oweSentence("Contracts", catBalance(buckets, "Contract")), "String", "oweline")]),
-    xRow([xCell(oweSentence("House", catBalance(buckets, "House")), "String", "oweline")]),
-    xRow([xCell(oweSentence("Trips", catBalance(buckets, "Trip")), "String", "oweline")]),
+    xRow([xCell(oweSentence("Contracts", catBalance(buckets, "Contract")), "String", catBalance(buckets, "Contract").even ? "oweSettled" : "oweOpen")]),
+    xRow([xCell(oweSentence("House", catBalance(buckets, "House")), "String", catBalance(buckets, "House").even ? "oweSettled" : "oweOpen")]),
+    xRow([xCell(oweSentence("Trips", catBalance(buckets, "Trip")), "String", catBalance(buckets, "Trip").even ? "oweSettled" : "oweOpen")]),
     blankRow(),
-    ...pivotBlock("Who owes whom by category", whoHeader, whoRows),
+    ...pivotBlock("Who owes whom by category", whoHeader, whoRows, "sectionWho"),
     ...pivotBlock("Still to pay contractors", ["Contractor","Vendor","Contract total","Paid so far","Still to pay"], [
       ...state.contracts.map(c => {
         const paid = contractPaid(c.id);
         const left = stillToPay(c.totalCents, paid);
         return xRow([
-          xCell(c.name), xCell(c.vendor || ""),
-          xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String"),
-          xCell(xNum(paid), "Number"),
-          xCell(left == null ? "Set a contract total" : xNum(Math.max(0, left)), left == null ? "String" : "Number")
+          xCell(c.name, "String", "txtC"), xCell(c.vendor || "", "String", "txtC"),
+          xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String", c.totalCents != null ? "numC" : "txtC"),
+          xCell(xNum(paid), "Number", "numC"),
+          xCell(left == null ? "Set a contract total" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC"))
         ]);
       }),
       xRow([
-        xCell("ALL CONTRACTORS", "String", "totaltxt"), xCell(""),
+        xCell("ALL CONTRACTORS", "String", "totaltxt"), xCell("", "String", "totaltxt"),
         totStyle(contractorsOutstanding().due), totStyle(contractorsOutstanding().paid),
         totStyle(Math.max(0, contractorsOutstanding().remaining))
       ])
-    ]),
+    ], "sectionStill"),
     ...pivotBlock("Pivot: category × payer", ["Category", aName, bName, "Total spend ("+ledger+")"], [
       ...cats.map(cat => {
         const b = catBalance(buckets, cat);
-        return xRow([xCell(cat), xCell(xNum(b.paidA), "Number"), xCell(xNum(b.paidB), "Number"), totStyle(b.total)]);
+        return xRow([tx(cat, cat), nr(xNum(b.paidA), cat), nr(xNum(b.paidB), cat), nr(xNum(b.total), cat)]);
       }),
       xRow([xCell("Grand total", "String", "totaltxt"), totStyle(overallB.paidA), totStyle(overallB.paidB), totStyle(overallB.total)])
-    ]),
-    ...pivotBlock("Pivot by category", catPivotHeader, catPivotRows),
-    sectionRow("Detail by item", sumHeader.length),
+    ], "section"),
+    ...pivotBlock("Pivot by category", catPivotHeader, catPivotRows, "section"),
+    sectionRow("Detail by item", sumHeader.length, "sectionDetail"),
     headerRow(sumHeader),
     ...sumDetail
   ];
@@ -1181,13 +1201,13 @@ function downloadExcel() {
       runAll += ev.amount;
     }
     return xRow([
-      xCell(ev.date), xCell(ev.type), xCell(ev.cat), xCell(ev.item), xCell(ev.desc),
-      xCell(ev.who), xCell(ev.split), xCell(xNum(ev.amount), "Number"),
-      xCell(xNum(ev.orig), "Number"), xCell(ev.ccy),
-      xCell(ev.zar != null ? xNum(ev.zar) : "", ev.zar != null ? "Number" : "String"),
-      xCell(xNum(runItem[key] || 0), "Number"),
-      xCell(xNum(runCat[ev.cat] || 0), "Number"),
-      xCell(xNum(runAll), "Number")
+      tx(ev.date, ev.cat), tx(ev.type, ev.cat), tx(ev.cat, ev.cat), tx(ev.item, ev.cat), tx(ev.desc, ev.cat),
+      tx(ev.who, ev.cat), tx(ev.split, ev.cat), nr(xNum(ev.amount), ev.cat),
+      nr(xNum(ev.orig), ev.cat), tx(ev.ccy, ev.cat),
+      xCell(ev.zar != null ? xNum(ev.zar) : "", ev.zar != null ? "Number" : "String", ev.zar != null ? band(ev.cat).n : band(ev.cat).t),
+      nr(xNum(runItem[key] || 0), ev.cat),
+      nr(xNum(runCat[ev.cat] || 0), ev.cat),
+      nr(xNum(runAll), ev.cat)
     ]);
   });
   const trackPivotHeader = ["Category","Payments","Payment spend ("+ledger+")","Settlements","Settled ("+ledger+")", aName+" paid", bName+" paid"];
@@ -1205,9 +1225,9 @@ function downloadExcel() {
     tpPay += pays.length; tpSpend += spend; tpSet += sets.length; tpSetAmt += settled; tpA += paidA; tpB += paidB;
     if (!list.length) continue;
     trackPivotRows.push(xRow([
-      xCell(cat), xCell(pays.length, "Number"), xCell(xNum(spend), "Number"),
-      xCell(sets.length, "Number"), xCell(xNum(settled), "Number"),
-      xCell(xNum(paidA), "Number"), xCell(xNum(paidB), "Number")
+      tx(cat, cat), nr(pays.length, cat), nr(xNum(spend), cat),
+      nr(sets.length, cat), nr(xNum(settled), cat),
+      nr(xNum(paidA), cat), nr(xNum(paidB), cat)
     ]));
   }
   trackPivotRows.push(xRow([
@@ -1223,13 +1243,13 @@ function downloadExcel() {
         const b = pays.filter(ev => ev.paidBy === "b").reduce((s, ev) => s + ev.amount, 0);
         tA += a; tB += b;
         if (!pays.length) continue;
-        rows.push(xRow([xCell(cat), xCell(xNum(a), "Number"), xCell(xNum(b), "Number"), totStyle(a + b)]));
+        rows.push(xRow([tx(cat, cat), nr(xNum(a), cat), nr(xNum(b), cat), nr(xNum(a + b), cat)]));
       }
       rows.push(xRow([xCell("Grand total", "String", "totaltxt"), totStyle(tA), totStyle(tB), totStyle(tA + tB)]));
       return rows;
-    })()),
-    ...pivotBlock("Pivot by category", trackPivotHeader, trackPivotRows),
-    sectionRow("Detail track", trackHeader.length),
+    })(), "section"),
+    ...pivotBlock("Pivot by category", trackPivotHeader, trackPivotRows, "section"),
+    sectionRow("Detail track", trackHeader.length, "sectionDetail"),
     headerRow(trackHeader),
     ...trackDetail
   ];
@@ -1240,15 +1260,16 @@ function downloadExcel() {
     const con = e.kind === "contract" ? state.contracts.find(x => x.id === e.targetId) : null;
     const paid = con ? contractPaid(con.id) : null;
     const left = con ? stillToPay(con.totalCents, paid) : null;
+    const cat = categoryLabel(e.kind);
     return xRow([
-    xCell(e.date), xCell(categoryLabel(e.kind)), xCell(itemName(e.kind, e.targetId)), xCell(e.description),
-    xCell(nameOf(e.paidBy)), xCell(splitLabel(e)), xCell(xNum(ledgerCents(e)), "Number"),
-    xCell(xNum(e.amountCents), "Number"), xCell(expenseCurrency(e)),
-    xCell(e.zarCents != null ? xNum(e.zarCents) : "", e.zarCents != null ? "Number" : "String"),
-    xCell(con && con.totalCents != null ? xNum(con.totalCents) : "", con && con.totalCents != null ? "Number" : "String"),
-    xCell(paid != null ? xNum(paid) : "", paid != null ? "Number" : "String"),
-    xCell(left == null ? "" : xNum(Math.max(0, left)), left == null ? "String" : "Number"),
-    xCell(e.fxRate != null ? Number(e.fxRate).toFixed(4) : ""), xCell(e.fxDate || "")
+    tx(e.date, cat), tx(cat, cat), tx(itemName(e.kind, e.targetId), cat), tx(e.description, cat),
+    tx(nameOf(e.paidBy), cat), tx(splitLabel(e), cat), nr(xNum(ledgerCents(e)), cat),
+    nr(xNum(e.amountCents), cat), tx(expenseCurrency(e), cat),
+    xCell(e.zarCents != null ? xNum(e.zarCents) : "", e.zarCents != null ? "Number" : "String", e.zarCents != null ? band(cat).n : band(cat).t),
+    xCell(con && con.totalCents != null ? xNum(con.totalCents) : "", con && con.totalCents != null ? "Number" : "String", con && con.totalCents != null ? band(cat).n : band(cat).t),
+    xCell(paid != null ? xNum(paid) : "", paid != null ? "Number" : "String", paid != null ? band(cat).n : band(cat).t),
+    xCell(left == null ? "" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left == null ? band(cat).t : (left > 0 ? "oweOpenN" : band(cat).n)),
+    tx(e.fxRate != null ? Number(e.fxRate).toFixed(4) : "", cat), tx(e.fxDate || "", cat)
   ]);
   });
   const payPivotHeader = ["Category","Item","Payments", aName+" paid", bName+" paid", "Total ("+ledger+")", "ZAR booked"];
@@ -1274,8 +1295,8 @@ function downloadExcel() {
       const r = items[item];
       cN += r.n; cA += r.a; cB += r.b; cT += r.total; cZ += r.zar;
       payPivotRows.push(xRow([
-        xCell(cat), xCell(item), xCell(r.n, "Number"), xCell(xNum(r.a), "Number"),
-        xCell(xNum(r.b), "Number"), xCell(xNum(r.total), "Number"), xCell(xNum(r.zar), "Number")
+        tx(cat, cat), tx(item, cat), nr(r.n, cat), nr(xNum(r.a), cat),
+        nr(xNum(r.b), cat), nr(xNum(r.total), cat), nr(xNum(r.zar), cat)
       ]));
     }
     gpN += cN; gpA += cA; gpB += cB; gpT += cT; gpZ += cZ;
@@ -1297,23 +1318,26 @@ function downloadExcel() {
         const b = list.filter(e => e.paidBy === "b").reduce((s, e) => s + ledgerCents(e), 0);
         tA += a; tB += b;
         if (!list.length) continue;
-        rows.push(xRow([xCell(cat), xCell(xNum(a), "Number"), xCell(xNum(b), "Number"), totStyle(a + b)]));
+        rows.push(xRow([tx(cat, cat), nr(xNum(a), cat), nr(xNum(b), cat), nr(xNum(a + b), cat)]));
       }
       rows.push(xRow([xCell("Grand total", "String", "totaltxt"), totStyle(tA), totStyle(tB), totStyle(tA + tB)]));
       return rows;
-    })()),
-    ...pivotBlock("Pivot by category and item", payPivotHeader, payPivotRows),
-    sectionRow("Detail", payHeader.length),
+    })(), "section"),
+    ...pivotBlock("Pivot by category and item", payPivotHeader, payPivotRows, "section"),
+    sectionRow("Detail", payHeader.length, "sectionDetail"),
     headerRow(payHeader),
     ...payDetail
   ];
 
   const xfList = state.transfers.filter(t => (!from || t.date >= from) && (!to || t.date <= to)).slice().sort((a,b) => a.date.localeCompare(b.date));
   const xfHeader = ["Date","From","To","Amount ("+ledger+")","Applied to","Item","Note"];
-  const xfDetail = xfList.map(t => xRow([
-    xCell(t.date), xCell(nameOf(t.from)), xCell(nameOf(t.to)), xCell(xNum(t.amountCents), "Number"),
-    xCell(categoryLabel(t.kind) || "Overall"), xCell(t.targetId ? itemName(t.kind, t.targetId) : "Overall"), xCell(t.notes || "")
-  ]));
+  const xfDetail = xfList.map(t => {
+    const cat = categoryLabel(t.kind) || "Overall";
+    return xRow([
+      tx(t.date, cat), tx(nameOf(t.from), cat), tx(nameOf(t.to), cat), nr(xNum(t.amountCents), cat),
+      tx(cat, cat), tx(t.targetId ? itemName(t.kind, t.targetId) : "Overall", cat), tx(t.notes || "", cat)
+    ]);
+  });
   const xfPivotHeader = ["Category","Item","Transfers", aName+" → "+bName, bName+" → "+aName, "Net to "+aName];
   const xfPivotRows = [];
   const xfBy = {};
@@ -1336,8 +1360,8 @@ function downloadExcel() {
       const r = items[item];
       cN += r.n; cAB += r.ab; cBA += r.ba;
       xfPivotRows.push(xRow([
-        xCell(cat), xCell(item), xCell(r.n, "Number"), xCell(xNum(r.ab), "Number"),
-        xCell(xNum(r.ba), "Number"), xCell(xNum(r.ba - r.ab), "Number")
+        tx(cat, cat), tx(item, cat), nr(r.n, cat), nr(xNum(r.ab), cat),
+        nr(xNum(r.ba), cat), nr(xNum(r.ba - r.ab), cat)
       ]));
     }
     xn += cN; xab += cAB; xba += cBA;
@@ -1359,13 +1383,13 @@ function downloadExcel() {
         const ab = Object.values(items).reduce((s, r) => s + r.ab, 0);
         const ba = Object.values(items).reduce((s, r) => s + r.ba, 0);
         tAB += ab; tBA += ba;
-        rows.push(xRow([xCell(cat), xCell(xNum(ab), "Number"), xCell(xNum(ba), "Number"), totStyle(ba - ab)]));
+        rows.push(xRow([tx(cat, cat), nr(xNum(ab), cat), nr(xNum(ba), cat), nr(xNum(ba - ab), cat)]));
       }
       rows.push(xRow([xCell("Grand total", "String", "totaltxt"), totStyle(tAB), totStyle(tBA), totStyle(tBA - tAB)]));
       return rows;
-    })()),
-    ...pivotBlock("Pivot by category and item", xfPivotHeader, xfPivotRows),
-    sectionRow("Detail", xfHeader.length),
+    })(), "section"),
+    ...pivotBlock("Pivot by category and item", xfPivotHeader, xfPivotRows, "section"),
+    sectionRow("Detail", xfHeader.length, "sectionDetail"),
     headerRow(xfHeader),
     ...xfDetail
   ];
@@ -1374,13 +1398,33 @@ function downloadExcel() {
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
 <Styles>
-  <Style ss:ID="header"><Font ss:Bold="1"/></Style>
-  <Style ss:ID="section"><Font ss:Bold="1" ss:Size="12"/></Style>
-  <Style ss:ID="money"><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="total"><Font ss:Bold="1"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="totaltxt"><Font ss:Bold="1"/></Style>
-  <Style ss:ID="owehead"><Font ss:Bold="1" ss:Size="14"/></Style>
-  <Style ss:ID="oweline"><Font ss:Size="12"/></Style>
+  <Style ss:ID="header"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="section"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionWho"><Font ss:Bold="1" ss:Size="12" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionStill"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#9A3B32" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionC"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionH"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2C5F8A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionT"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#8A5A2B" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionDetail"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#5C6B73" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="money"><NumberFormat ss:Format="#,##0.00"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="total"><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="totaltxt"><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="owehead"><Font ss:Bold="1" ss:Size="14" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweline"><Font ss:Size="12" ss:Color="#1C3A4A"/><Interior ss:Color="#EFE7D8" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweOpen"><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweOpenN"><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="oweSettled"><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweSettledN"><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtC"><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numC"><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtH"><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numH"><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtT"><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numT"><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtO"><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numO"><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtN"><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numN"><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
 </Styles>
 ${xSheet("Who owes whom", whoBody)}
 ${xSheet("Summary", summaryBody)}
