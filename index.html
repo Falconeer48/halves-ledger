@@ -506,10 +506,18 @@ function paymentDialog(preset) {
         <option value="a" ${paidBy==="a"?"selected":""}>${esc(nameOf("a"))}</option>
         <option value="b" ${paidBy==="b"?"selected":""}>${esc(nameOf("b"))}</option>
       </select>
-      <label>Share for ${esc(nameOf("a"))} (%)</label>
-      <div class="split">
-        <input name="splitA" type="number" min="0" max="100" value="${existing?.splitA ?? 50}" />
-        <span class="muted">Default 50/50</span>
+      <label>How to split this payment</label>
+      <select name="splitMode">
+        <option value="half" ${(existing ? existing.splitA : 50) === 50 ? "selected" : ""}>50/50 — one of us paid for both</option>
+        <option value="own" ${existing && ((existing.paidBy === "a" && existing.splitA === 100) || (existing.paidBy === "b" && existing.splitA === 0)) ? "selected" : ""}>Payer’s own share — we each pay our half separately</option>
+        <option value="custom" ${existing && existing.splitA !== 50 && !((existing.paidBy === "a" && existing.splitA === 100) || (existing.paidBy === "b" && existing.splitA === 0)) ? "selected" : ""}>Custom %</option>
+      </select>
+      <div id="custom-split">
+        <label>Share for ${esc(nameOf("a"))} (0–100)</label>
+        <div class="split">
+          <input name="splitA" type="number" min="0" max="100" step="1" value="${existing?.splitA ?? 50}" />
+          <span class="muted">0 = all ${esc(nameOf("b"))}’s. 100 = all ${esc(nameOf("a"))}’s. Zero is allowed.</span>
+        </div>
       </div>
       <div class="toolbar" style="margin-top:18px">
         <button class="btn" type="submit">Save payment</button>
@@ -583,11 +591,23 @@ function paymentDialog(preset) {
     syncFx();
   });
   syncFx();
+  const toggleSplit = () => {
+    document.getElementById("custom-split").style.display = form.splitMode.value === "custom" ? "block" : "none";
+  };
+  form.splitMode.addEventListener("change", toggleSplit);
+  toggleSplit();
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const cents = dollarsToCents(form.amount.value);
     if (cents == null || !form.targetId.value) return;
-    const splitA = Math.max(0, Math.min(100, Number(form.splitA.value) || 50));
+    const mode = form.splitMode.value;
+    let splitA;
+    if (mode === "half") splitA = 50;
+    else if (mode === "own") splitA = form.paidBy.value === "a" ? 100 : 0;
+    else {
+      const n = Number(form.splitA.value);
+      splitA = Math.max(0, Math.min(100, Number.isFinite(n) ? n : 50));
+    }
     const ccy = form.currency.value || state.settings.currency;
     const rate = Number(form.fxRate.value);
     const zar = toZarCents(cents, ccy, rate);
@@ -755,6 +775,13 @@ function entityDialog(kind, existing) {
   });
 }
 
+function splitLabel(e) {
+  const a = e.splitA ?? 50;
+  if (a === 50) return "50/50";
+  if ((e.paidBy === "a" && a === 100) || (e.paidBy === "b" && a === 0)) return "own share";
+  return `split ${a}/${100 - a}`;
+}
+
 function rowActs(actEdit, actDel, id) {
   return `<div class="row-acts">
       <button type="button" class="btn ghost sm" data-act="${actEdit}" data-id="${esc(id)}">Edit</button>
@@ -768,7 +795,7 @@ function expenseRows(list) {
     <div class="list-row">
       <div>
         <div>${esc(e.description)}</div>
-        <div class="muted">${prettyDate(e.date)} · ${esc(nameOf(e.paidBy))} paid · split ${e.splitA}/${100-e.splitA}${expenseCurrency(e) && expenseCurrency(e) !== (state.settings.currency||"ZAR") ? " · " + moneyIn(e.amountCents, expenseCurrency(e)) : ""}</div>
+        <div class="muted">${prettyDate(e.date)} · ${esc(nameOf(e.paidBy))} paid · ${esc(splitLabel(e))}${expenseCurrency(e) && expenseCurrency(e) !== (state.settings.currency||"ZAR") ? " · " + moneyIn(e.amountCents, expenseCurrency(e)) : ""}</div>
         ${expenseCurrency(e) !== "ZAR" && (e.zarCents != null || toZarCents(e.amountCents, expenseCurrency(e), e.fxRate) != null) ? `<div class="muted">${esc(moneyZar(e.zarCents != null ? e.zarCents : toZarCents(e.amountCents, expenseCurrency(e), e.fxRate)))}${e.fxRate ? " at " + Number(e.fxRate).toFixed(4) + " / " + expenseCurrency(e) : ""}</div>` : ""}
       </div>
       <div class="row-end">
