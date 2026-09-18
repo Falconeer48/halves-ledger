@@ -965,6 +965,14 @@ function blankRow() { return `<Row></Row>`; }
 function pivotBlock(title, headers, rows) {
   return [sectionRow(title, headers.length), headerRow(headers), ...rows, blankRow()];
 }
+function oweSentence(label, b) {
+  if (!b || b.even) return `${label}: Settled — nobody owes anyone`;
+  return `${label}: ${nameOf(b.debtor)} owes ${nameOf(b.creditor)} ${money(b.owed)}`;
+}
+function catBalance(buckets, cat) {
+  const list = buckets.filter(g => g.cat === cat);
+  return balance(list.flatMap(g => g.exp), list.flatMap(g => g.xf));
+}
 function reportBuckets(from, to) {
   const groups = [
     { cat: "Overall", name: "All categories", kind: "overall", id: null, exp: filterExp(null, null, from, to), xf: state.transfers.filter(t => (!from || t.date >= from) && (!to || t.date <= to)) },
@@ -1024,7 +1032,49 @@ function downloadExcel() {
     xCell(oweText(overallB), "String", "totaltxt"), totStyle(overallB.owed)
   ]));
   const catPivotHeader = ["Category","Items","Payments","Spend ("+ledger+")", aName+" paid", bName+" paid", aName+" share", bName+" share", "Who owes", "Amount owed ("+ledger+")"];
+  const whoHeader = ["Category","Status","Who owes","Owes whom","Amount owed ("+ledger+")"];
+  const whoLineRow = (label, b, total) => {
+    const st = total ? "totaltxt" : null;
+    const ns = total ? "total" : null;
+    return xRow([
+      xCell(label, "String", st),
+      xCell(b.even ? "Settled" : "Open", "String", st),
+      xCell(b.even ? "—" : nameOf(b.debtor), "String", st),
+      xCell(b.even ? "—" : nameOf(b.creditor), "String", st),
+      xCell(xNum(b.owed), "Number", ns)
+    ]);
+  };
+  const whoRows = [
+    whoLineRow("Contracts", catBalance(buckets, "Contract")),
+    whoLineRow("House", catBalance(buckets, "House")),
+    whoLineRow("Trips", catBalance(buckets, "Trip")),
+    whoLineRow("OVERALL TOTAL", overallB, true)
+  ];
+  const whoBody = [
+    sectionRow("Who owes whom", 5),
+    xRow([xCell(oweSentence("Overall", overallB), "String", "owehead")]),
+    xRow([xCell(oweSentence("Contracts", catBalance(buckets, "Contract")), "String", "oweline")]),
+    xRow([xCell(oweSentence("House", catBalance(buckets, "House")), "String", "oweline")]),
+    xRow([xCell(oweSentence("Trips", catBalance(buckets, "Trip")), "String", "oweline")]),
+    blankRow(),
+    headerRow(whoHeader),
+    ...whoRows
+  ];
   const summaryBody = [
+    sectionRow("Who owes whom — totals", 5),
+    xRow([xCell(oweSentence("Overall", overallB), "String", "owehead")]),
+    xRow([xCell(oweSentence("Contracts", catBalance(buckets, "Contract")), "String", "oweline")]),
+    xRow([xCell(oweSentence("House", catBalance(buckets, "House")), "String", "oweline")]),
+    xRow([xCell(oweSentence("Trips", catBalance(buckets, "Trip")), "String", "oweline")]),
+    blankRow(),
+    ...pivotBlock("Who owes whom by category", whoHeader, whoRows),
+    ...pivotBlock("Pivot: category × payer", ["Category", aName, bName, "Total spend ("+ledger+")"], [
+      ...cats.map(cat => {
+        const b = catBalance(buckets, cat);
+        return xRow([xCell(cat), xCell(xNum(b.paidA), "Number"), xCell(xNum(b.paidB), "Number"), totStyle(b.total)]);
+      }),
+      xRow([xCell("Grand total", "String", "totaltxt"), totStyle(overallB.paidA), totStyle(overallB.paidB), totStyle(overallB.total)])
+    ]),
     ...pivotBlock("Pivot by category", catPivotHeader, catPivotRows),
     sectionRow("Detail by item", sumHeader.length),
     headerRow(sumHeader),
@@ -1093,6 +1143,19 @@ function downloadExcel() {
     xCell(tpSet, "Number", "total"), totStyle(tpSetAmt), totStyle(tpA), totStyle(tpB)
   ]));
   const trackBody = [
+    ...pivotBlock("Pivot: category × payer", ["Category", aName, bName, "Total spend ("+ledger+")"], (() => {
+      const rows = []; let tA = 0, tB = 0;
+      for (const cat of cats) {
+        const pays = events.filter(ev => ev.type === "Payment" && ev.cat === cat);
+        const a = pays.filter(ev => ev.paidBy === "a").reduce((s, ev) => s + ev.amount, 0);
+        const b = pays.filter(ev => ev.paidBy === "b").reduce((s, ev) => s + ev.amount, 0);
+        tA += a; tB += b;
+        if (!pays.length) continue;
+        rows.push(xRow([xCell(cat), xCell(xNum(a), "Number"), xCell(xNum(b), "Number"), totStyle(a + b)]));
+      }
+      rows.push(xRow([xCell("Grand total", "String", "totaltxt"), totStyle(tA), totStyle(tB), totStyle(tA + tB)]));
+      return rows;
+    })()),
     ...pivotBlock("Pivot by category", trackPivotHeader, trackPivotRows),
     sectionRow("Detail track", trackHeader.length),
     headerRow(trackHeader),
@@ -1146,7 +1209,20 @@ function downloadExcel() {
     totStyle(gpA), totStyle(gpB), totStyle(gpT), totStyle(gpZ)
   ]));
   const payBody = [
-    ...pivotBlock("Pivot by category", payPivotHeader, payPivotRows),
+    ...pivotBlock("Pivot: category × payer", ["Category", aName, bName, "Total ("+ledger+")"], (() => {
+      const rows = []; let tA = 0, tB = 0;
+      for (const cat of cats) {
+        const list = payList.filter(e => categoryLabel(e.kind) === cat);
+        const a = list.filter(e => e.paidBy === "a").reduce((s, e) => s + ledgerCents(e), 0);
+        const b = list.filter(e => e.paidBy === "b").reduce((s, e) => s + ledgerCents(e), 0);
+        tA += a; tB += b;
+        if (!list.length) continue;
+        rows.push(xRow([xCell(cat), xCell(xNum(a), "Number"), xCell(xNum(b), "Number"), totStyle(a + b)]));
+      }
+      rows.push(xRow([xCell("Grand total", "String", "totaltxt"), totStyle(tA), totStyle(tB), totStyle(tA + tB)]));
+      return rows;
+    })()),
+    ...pivotBlock("Pivot by category and item", payPivotHeader, payPivotRows),
     sectionRow("Detail", payHeader.length),
     headerRow(payHeader),
     ...payDetail
@@ -1195,7 +1271,20 @@ function downloadExcel() {
     totStyle(xab), totStyle(xba), totStyle(xba - xab)
   ]));
   const xfBody = [
-    ...pivotBlock("Pivot by category", xfPivotHeader, xfPivotRows),
+    ...pivotBlock("Pivot: category × direction", ["Category", aName+" → "+bName, bName+" → "+aName, "Net to "+aName], (() => {
+      const rows = []; let tAB = 0, tBA = 0;
+      for (const cat of [...cats, "Overall"]) {
+        const items = xfBy[cat];
+        if (!items) continue;
+        const ab = Object.values(items).reduce((s, r) => s + r.ab, 0);
+        const ba = Object.values(items).reduce((s, r) => s + r.ba, 0);
+        tAB += ab; tBA += ba;
+        rows.push(xRow([xCell(cat), xCell(xNum(ab), "Number"), xCell(xNum(ba), "Number"), totStyle(ba - ab)]));
+      }
+      rows.push(xRow([xCell("Grand total", "String", "totaltxt"), totStyle(tAB), totStyle(tBA), totStyle(tBA - tAB)]));
+      return rows;
+    })()),
+    ...pivotBlock("Pivot by category and item", xfPivotHeader, xfPivotRows),
     sectionRow("Detail", xfHeader.length),
     headerRow(xfHeader),
     ...xfDetail
@@ -1210,7 +1299,10 @@ function downloadExcel() {
   <Style ss:ID="money"><NumberFormat ss:Format="#,##0.00"/></Style>
   <Style ss:ID="total"><Font ss:Bold="1"/><NumberFormat ss:Format="#,##0.00"/></Style>
   <Style ss:ID="totaltxt"><Font ss:Bold="1"/></Style>
+  <Style ss:ID="owehead"><Font ss:Bold="1" ss:Size="14"/></Style>
+  <Style ss:ID="oweline"><Font ss:Size="12"/></Style>
 </Styles>
+${xSheet("Who owes whom", whoBody)}
 ${xSheet("Summary", summaryBody)}
 ${xSheet("Track", trackBody)}
 ${xSheet("Payments", payBody)}
