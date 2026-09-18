@@ -932,6 +932,155 @@ function renderDetail(kind, id) {
   `;
 }
 
+function itemName(kind, id) {
+  if (kind === "contract") return state.contracts.find(x => x.id === id)?.name || id;
+  if (kind === "house") return state.house.find(x => x.id === id)?.name || id;
+  if (kind === "trip") return state.trips.find(x => x.id === id)?.name || id;
+  return "Overall";
+}
+function categoryLabel(kind) {
+  return { contract: "Contract", house: "House", trip: "Trip", overall: "Overall" }[kind] || kind || "";
+}
+function xNum(cents) { return ((cents || 0) / 100).toFixed(2); }
+function xCell(value, type) {
+  if (type === "Number") {
+    const n = value == null || value === "" ? "" : String(value);
+    if (n === "") return `<Cell><Data ss:Type="String"></Data></Cell>`;
+    return `<Cell ss:StyleID="money"><Data ss:Type="Number">${n}</Data></Cell>`;
+  }
+  return `<Cell><Data ss:Type="String">${esc(value ?? "")}</Data></Cell>`;
+}
+function xRow(cells) { return `<Row>${cells.join("")}</Row>`; }
+function xSheet(name, header, rows) {
+  const safe = String(name).replace(/[\\/*?:\[\]]/g, " ").slice(0, 31);
+  const head = xRow(header.map(h => `<Cell ss:StyleID="header"><Data ss:Type="String">${esc(h)}</Data></Cell>`));
+  return `<Worksheet ss:Name="${esc(safe)}"><Table>${head}${rows.join("")}</Table></Worksheet>`;
+}
+function reportBuckets(from, to) {
+  const groups = [
+    { cat: "Overall", name: "All categories", kind: "overall", id: null, exp: filterExp(null, null, from, to), xf: state.transfers.filter(t => (!from || t.date >= from) && (!to || t.date <= to)) },
+    ...state.contracts.map(c => ({ cat: "Contract", name: c.name, kind: "contract", id: c.id, totalCents: c.totalCents, exp: filterExp("contract", c.id, from, to), xf: filterXfer("contract", c.id, from, to) })),
+    ...state.house.map(c => ({ cat: "House", name: c.name, kind: "house", id: c.id, exp: filterExp("house", c.id, from, to), xf: filterXfer("house", c.id, from, to) })),
+    ...state.trips.map(c => ({ cat: "Trip", name: c.name, kind: "trip", id: c.id, exp: filterExp("trip", c.id, from, to), xf: filterXfer("trip", c.id, from, to) }))
+  ];
+  return groups.map(g => ({ ...g, bal: balance(g.exp, g.xf) }));
+}
+function downloadExcel() {
+  const from = document.getElementById("r-from")?.value || "";
+  const to = document.getElementById("r-to")?.value || "";
+  const aName = nameOf("a");
+  const bName = nameOf("b");
+  const ledger = state.settings.currency || "ZAR";
+  const buckets = reportBuckets(from, to);
+  const oweText = (b) => b.even ? "Settled" : `${nameOf(b.debtor)} owes ${nameOf(b.creditor)}`;
+
+  const sumHeader = ["Category","Item","Payments","Spend ("+ledger+")", aName+" paid", bName+" paid", aName+" share", bName+" share", "Who owes", "Amount owed ("+ledger+")", "Contract total", "Still to pay"];
+  const sumRows = [];
+  const addSum = (g) => {
+    const b = g.bal;
+    const still = g.totalCents != null ? Math.max(0, g.totalCents - b.total) : "";
+    sumRows.push(xRow([
+      xCell(g.cat), xCell(g.name), xCell(g.exp.length, "Number"),
+      xCell(xNum(b.total), "Number"), xCell(xNum(b.paidA), "Number"), xCell(xNum(b.paidB), "Number"),
+      xCell(xNum(b.shareA), "Number"), xCell(xNum(b.shareB), "Number"),
+      xCell(oweText(b)), xCell(xNum(b.owed), "Number"),
+      xCell(g.totalCents != null ? xNum(g.totalCents) : "", g.totalCents != null ? "Number" : "String"),
+      xCell(still === "" ? "" : xNum(still), still === "" ? "String" : "Number")
+    ]));
+  };
+  buckets.filter(g => g.cat === "Overall" || g.exp.length || g.xf.length).forEach(addSum);
+  const subtotal = (cat) => {
+    const list = buckets.filter(g => g.cat === cat);
+    const exp = list.flatMap(g => g.exp);
+    const xf = list.flatMap(g => g.xf);
+    const b = balance(exp, xf);
+    sumRows.push(xRow([
+      xCell(cat + " total"), xCell(""), xCell(exp.length, "Number"),
+      xCell(xNum(b.total), "Number"), xCell(xNum(b.paidA), "Number"), xCell(xNum(b.paidB), "Number"),
+      xCell(xNum(b.shareA), "Number"), xCell(xNum(b.shareB), "Number"),
+      xCell(oweText(b)), xCell(xNum(b.owed), "Number"), xCell(""), xCell("")
+    ]));
+  };
+  subtotal("Contract");
+  subtotal("House");
+  subtotal("Trip");
+
+  const events = [
+    ...state.expenses.filter(e => (!from || e.date >= from) && (!to || e.date <= to)).map(e => ({
+      date: e.date, type: "Payment", cat: categoryLabel(e.kind), item: itemName(e.kind, e.targetId),
+      desc: e.description, who: nameOf(e.paidBy), split: splitLabel(e),
+      amount: ledgerCents(e), orig: e.amountCents, ccy: expenseCurrency(e),
+      zar: e.zarCents != null ? e.zarCents : toZarCents(e.amountCents, expenseCurrency(e), e.fxRate),
+      kind: e.kind, id: e.targetId, paidBy: e.paidBy, splitA: e.splitA ?? 50, xferFrom: null
+    })),
+    ...state.transfers.filter(t => (!from || t.date >= from) && (!to || t.date <= to)).map(t => ({
+      date: t.date, type: "Settlement", cat: categoryLabel(t.kind), item: t.targetId ? itemName(t.kind, t.targetId) : "Overall",
+      desc: t.notes || (nameOf(t.from) + " → " + nameOf(t.to)), who: nameOf(t.from) + " → " + nameOf(t.to), split: "",
+      amount: t.amountCents, orig: t.amountCents, ccy: ledger, zar: t.amountCents,
+      kind: t.kind, id: t.targetId, paidBy: null, splitA: null, xferFrom: t.from, xferTo: t.to
+    }))
+  ].sort((x, y) => (x.date || "").localeCompare(y.date || "") || x.type.localeCompare(y.type));
+
+  const runItem = {};
+  const runCat = { Contract: 0, House: 0, Trip: 0 };
+  let runAll = 0;
+  const trackHeader = ["Date","Type","Category","Item","Description","Paid by / transfer","Split","Amount ("+ledger+")","Original amount","Original currency","ZAR","Running item spend","Running category spend","Running total spend"];
+  const trackRows = events.map(ev => {
+    const key = ev.kind + ":" + (ev.id || "overall");
+    if (ev.type === "Payment") {
+      runItem[key] = (runItem[key] || 0) + ev.amount;
+      if (runCat[ev.cat] != null) runCat[ev.cat] += ev.amount;
+      runAll += ev.amount;
+    }
+    return xRow([
+      xCell(ev.date), xCell(ev.type), xCell(ev.cat), xCell(ev.item), xCell(ev.desc),
+      xCell(ev.who), xCell(ev.split), xCell(xNum(ev.amount), "Number"),
+      xCell(xNum(ev.orig), "Number"), xCell(ev.ccy),
+      xCell(ev.zar != null ? xNum(ev.zar) : "", ev.zar != null ? "Number" : "String"),
+      xCell(xNum(runItem[key] || 0), "Number"),
+      xCell(xNum(runCat[ev.cat] || 0), "Number"),
+      xCell(xNum(runAll), "Number")
+    ]);
+  });
+
+  const payHeader = ["Date","Category","Item","Description","Paid by","Split","Ledger amount ("+ledger+")","Original amount","Currency","ZAR booked","FX rate","FX date"];
+  const payRows = state.expenses.filter(e => (!from || e.date >= from) && (!to || e.date <= to))
+    .slice().sort((a,b) => a.date.localeCompare(b.date)).map(e => xRow([
+      xCell(e.date), xCell(categoryLabel(e.kind)), xCell(itemName(e.kind, e.targetId)), xCell(e.description),
+      xCell(nameOf(e.paidBy)), xCell(splitLabel(e)), xCell(xNum(ledgerCents(e)), "Number"),
+      xCell(xNum(e.amountCents), "Number"), xCell(expenseCurrency(e)),
+      xCell(e.zarCents != null ? xNum(e.zarCents) : "", e.zarCents != null ? "Number" : "String"),
+      xCell(e.fxRate != null ? Number(e.fxRate).toFixed(4) : ""), xCell(e.fxDate || "")
+    ]));
+
+  const xfHeader = ["Date","From","To","Amount ("+ledger+")","Applied to","Item","Note"];
+  const xfRows = state.transfers.filter(t => (!from || t.date >= from) && (!to || t.date <= to))
+    .slice().sort((a,b) => a.date.localeCompare(b.date)).map(t => xRow([
+      xCell(t.date), xCell(nameOf(t.from)), xCell(nameOf(t.to)), xCell(xNum(t.amountCents), "Number"),
+      xCell(categoryLabel(t.kind)), xCell(t.targetId ? itemName(t.kind, t.targetId) : "Overall"), xCell(t.notes || "")
+    ]));
+
+  const xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles>
+  <Style ss:ID="header"><Font ss:Bold="1"/></Style>
+  <Style ss:ID="money"><NumberFormat ss:Format="#,##0.00"/></Style>
+</Styles>
+${xSheet("Summary", sumHeader, sumRows)}
+${xSheet("Track", trackHeader, trackRows)}
+${xSheet("Payments", payHeader, payRows)}
+${xSheet("Settlements", xfHeader, xfRows)}
+</Workbook>`;
+  const blob = new Blob(["\uFEFF" + xml], { type: "application/vnd.ms-excel" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  const range = (from || to) ? `-${from || "start"}-to-${to || "end"}` : "-" + today();
+  a.download = `Halves-report${range}.xls`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
 function renderReport() {
   const from = document.getElementById("r-from")?.value || "";
   const to = document.getElementById("r-to")?.value || "";
@@ -956,6 +1105,7 @@ function renderReport() {
       <label style="margin:0">From <input id="r-from" type="date" value="${esc(from)}" /></label>
       <label style="margin:0">To <input id="r-to" type="date" value="${esc(to)}" /></label>
       <button class="btn ghost sm" data-act="reprint">Apply dates</button>
+      <button class="btn" data-act="excel">Download Excel</button>
       <button class="btn ghost sm" onclick="window.print()">Print</button>
     </div>
     <div class="card" style="overflow:auto">
@@ -1096,6 +1246,7 @@ document.addEventListener("click", (e) => {
       render();
     });
   }
+  if (act === "excel") downloadExcel();
   if (act === "reprint") render();
   if (act === "export") {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
