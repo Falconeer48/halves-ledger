@@ -999,19 +999,33 @@ function xCell(value, type, style) {
   return `<Cell ss:StyleID="${style || "txtN"}"><Data ss:Type="String">${esc(value ?? "")}</Data></Cell>`;
 }
 function xRow(cells) { return `<Row>${cells.join("")}</Row>`; }
-function xSheet(name, bodyRows) {
+function xSheet(name, bodyRows, filter) {
   const safe = String(name).replace(/[\\/*?:\[\]]/g, " ").slice(0, 31);
+  const n = bodyRows.length || 1;
+  const start = (filter && filter.start) ? filter.start : 1;
+  const end = (filter && filter.end) ? Math.max(filter.end, start) : n;
+  const cols = (filter && filter.cols) ? filter.cols : 16;
+  const rc = `R${start}C1:R${end}C${cols}`;
+  const q = "'" + safe.replace(/'/g, "''") + "'";
   return `<Worksheet ss:Name="${esc(safe)}">
+<Names><NamedRange ss:Name="_FilterDatabase" ss:RefersTo="=${q}!${rc}"/></Names>
 <Table>
-<Column ss:Width="160"/>
-<Column ss:Width="130" ss:Span="16"/>
+<Column ss:AutoFitWidth="0" ss:Width="160"/>
+<Column ss:AutoFitWidth="0" ss:Width="130" ss:Span="16"/>
 ${bodyRows.join("")}
 </Table>
+<AutoFilter x:Range="${rc}" xmlns="urn:schemas-microsoft-com:office:excel"></AutoFilter>
 <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><DoNotDisplayGridlines/></WorksheetOptions>
 </Worksheet>`;
 }
 function headerRow(cols) {
   return xRow(cols.map(h => xCell(h, "String", "header")));
+}
+function filterAt(body, headerHtml, colCount) {
+  const i = body.indexOf(headerHtml);
+  const start = i >= 0 ? i + 1 : 1;
+  const end = Math.max(start + 1, body.length);
+  return { start, end, cols: colCount };
 }
 function sectionRow(text, span, style) {
   return `<Row><Cell ss:StyleID="${style || "section"}" ss:MergeAcross="${Math.max(0, (span || 8) - 1)}"><Data ss:Type="String">${esc(text)}</Data></Cell></Row>`;
@@ -1394,43 +1408,134 @@ function downloadExcel() {
     ...xfDetail
   ];
 
+  const contractEntryHeader = ["Contract","Vendor","Date","Description","Paid by","Split","Amount ("+ledger+")", aName, bName, "Original amount","Currency","ZAR booked","Contract total","Paid so far","Still to pay"];
+  const contractPivotHeader = ["Contract","Vendor","Payments", aName+" paid", bName+" paid", "Total ("+ledger+")","Still to pay","Who owes","Amount owed"];
+  const contractPivotRows = [];
+  const contractEntryRows = [];
+  let cPayN = 0, cA = 0, cB = 0, cT = 0, cLeftT = 0;
+  for (const c of state.contracts) {
+    const ex = filterExp("contract", c.id, from, to).slice().sort((a,b) => a.date.localeCompare(b.date));
+    const b = balance(ex, filterXfer("contract", c.id, from, to));
+    const paid = contractPaid(c.id);
+    const left = stillToPay(c.totalCents, paid);
+    cPayN += ex.length; cA += b.paidA; cB += b.paidB; cT += b.total; cLeftT += left != null ? Math.max(0, left) : 0;
+    contractPivotRows.push(xRow([
+      tx(c.name, "Contract"), tx(c.vendor || "", "Contract"), nr(ex.length, "Contract"),
+      nr(xNum(b.paidA), "Contract"), nr(xNum(b.paidB), "Contract"), nr(xNum(b.total), "Contract"),
+      xCell(left == null ? "Set a total" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC")),
+      tx(oweText(b), "Contract"), nr(xNum(b.owed), "Contract")
+    ]));
+    for (const e of ex) {
+      const amt = ledgerCents(e);
+      contractEntryRows.push(xRow([
+        tx(c.name, "Contract"), tx(c.vendor || "", "Contract"), tx(e.date, "Contract"), tx(e.description, "Contract"),
+        tx(nameOf(e.paidBy), "Contract"), tx(splitLabel(e), "Contract"), nr(xNum(amt), "Contract"),
+        nr(xNum(e.paidBy === "a" ? amt : 0), "Contract"), nr(xNum(e.paidBy === "b" ? amt : 0), "Contract"),
+        nr(xNum(e.amountCents), "Contract"), tx(expenseCurrency(e), "Contract"),
+        xCell(e.zarCents != null ? xNum(e.zarCents) : "", e.zarCents != null ? "Number" : "String", e.zarCents != null ? "numC" : "txtC"),
+        xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String", c.totalCents != null ? "numC" : "txtC"),
+        nr(xNum(paid), "Contract"),
+        xCell(left == null ? "" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC"))
+      ]));
+    }
+  }
+  contractPivotRows.push(xRow([
+    xCell("Grand total", "String", "totaltxt"), xCell("", "String", "totaltxt"), xCell(cPayN, "Number", "total"),
+    totStyle(cA), totStyle(cB), totStyle(cT), totStyle(cLeftT), xCell("", "String", "totaltxt"), xCell("", "String", "totaltxt")
+  ]));
+  const contractHead = headerRow(contractEntryHeader);
+  const contractBody = [
+    ...pivotBlock("Pivot table — all contract entries", contractPivotHeader, contractPivotRows.length ? contractPivotRows : [xRow([tx("No contracts", "Contract")])], "sectionC"),
+    sectionRow("All contract entries — use the drop-downs to filter", contractEntryHeader.length, "sectionDetail"),
+    contractHead,
+    ...(contractEntryRows.length ? contractEntryRows : [xRow([tx("No payments yet", "Contract")])])
+  ];
+
+  const tripEntryHeader = ["Trip","Location","Dates","Trip currency","Date","Description","Paid by","Split","Amount ("+ledger+")", aName, bName, "Original amount","Currency","ZAR booked","FX rate"];
+  const tripPivotHeader = ["Trip","Location","Payments", aName+" paid", bName+" paid", "Total ("+ledger+")","Who owes","Amount owed"];
+  const tripPivotRows = [];
+  const tripEntryRows = [];
+  let tPayN = 0, tA = 0, tB = 0, tTot = 0;
+  for (const t of state.trips) {
+    const ex = filterExp("trip", t.id, from, to).slice().sort((a,b) => a.date.localeCompare(b.date));
+    const b = balance(ex, filterXfer("trip", t.id, from, to));
+    const dates = [t.startDate, t.endDate].filter(Boolean).map(prettyDate).join(" – ");
+    tPayN += ex.length; tA += b.paidA; tB += b.paidB; tTot += b.total;
+    tripPivotRows.push(xRow([
+      tx(t.name, "Trip"), tx(t.location || "", "Trip"), nr(ex.length, "Trip"),
+      nr(xNum(b.paidA), "Trip"), nr(xNum(b.paidB), "Trip"), nr(xNum(b.total), "Trip"),
+      tx(oweText(b), "Trip"), nr(xNum(b.owed), "Trip")
+    ]));
+    for (const e of ex) {
+      const amt = ledgerCents(e);
+      tripEntryRows.push(xRow([
+        tx(t.name, "Trip"), tx(t.location || "", "Trip"), tx(dates, "Trip"), tx(t.currency || "ZAR", "Trip"),
+        tx(e.date, "Trip"), tx(e.description, "Trip"), tx(nameOf(e.paidBy), "Trip"), tx(splitLabel(e), "Trip"),
+        nr(xNum(amt), "Trip"), nr(xNum(e.paidBy === "a" ? amt : 0), "Trip"), nr(xNum(e.paidBy === "b" ? amt : 0), "Trip"),
+        nr(xNum(e.amountCents), "Trip"), tx(expenseCurrency(e), "Trip"),
+        xCell(e.zarCents != null ? xNum(e.zarCents) : "", e.zarCents != null ? "Number" : "String", e.zarCents != null ? "numT" : "txtT"),
+        tx(e.fxRate != null ? Number(e.fxRate).toFixed(4) : "", "Trip")
+      ]));
+    }
+  }
+  tripPivotRows.push(xRow([
+    xCell("Grand total", "String", "totaltxt"), xCell("", "String", "totaltxt"), xCell(tPayN, "Number", "total"),
+    totStyle(tA), totStyle(tB), totStyle(tTot), xCell("", "String", "totaltxt"), xCell("", "String", "totaltxt")
+  ]));
+  const tripHead = headerRow(tripEntryHeader);
+  const tripBody = [
+    ...pivotBlock("Pivot table — all trip entries", tripPivotHeader, tripPivotRows.length ? tripPivotRows : [xRow([tx("No trips", "Trip")])], "sectionT"),
+    sectionRow("All trip entries — use the drop-downs to filter", tripEntryHeader.length, "sectionDetail"),
+    tripHead,
+    ...(tripEntryRows.length ? tripEntryRows : [xRow([tx("No payments yet", "Trip")])])
+  ];
+
+  const whoHead = headerRow(whoHeader);
+  const payHead = headerRow(payHeader);
+  const xfHead = headerRow(xfHeader);
+  const trackHead = headerRow(trackHeader);
+  const sumHead = headerRow(sumHeader);
+
   const xml = `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel">
 <Styles>
-  <Style ss:ID="header"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="section"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionWho"><Font ss:Bold="1" ss:Size="12" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionStill"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#9A3B32" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionC"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionH"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2C5F8A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionT"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#8A5A2B" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionDetail"><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#5C6B73" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="money"><NumberFormat ss:Format="#,##0.00"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="total"><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="totaltxt"><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="owehead"><Font ss:Bold="1" ss:Size="14" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="oweline"><Font ss:Size="12" ss:Color="#1C3A4A"/><Interior ss:Color="#EFE7D8" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="oweOpen"><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="oweOpenN"><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="oweSettled"><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="oweSettledN"><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtC"><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numC"><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtH"><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numH"><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtT"><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numT"><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtO"><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numO"><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtN"><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numN"><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>
+  <Style ss:ID="header"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="section"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionWho"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionStill"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#9A3B32" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionC"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionH"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2C5F8A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionT"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#8A5A2B" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionDetail"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#5C6B73" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="money"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="#,##0.00"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="total"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="totaltxt"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="owehead"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="14" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweline"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Size="12" ss:Color="#1C3A4A"/><Interior ss:Color="#EFE7D8" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweOpen"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweOpenN"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="oweSettled"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweSettledN"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtC"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numC"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtH"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numH"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtT"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numT"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtO"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numO"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtN"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numN"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
 </Styles>
-${xSheet("Who owes whom", whoBody)}
-${xSheet("Summary", summaryBody)}
-${xSheet("Track", trackBody)}
-${xSheet("Payments", payBody)}
-${xSheet("Settlements", xfBody)}
+${xSheet("Who owes whom", whoBody, filterAt(whoBody, whoHead, whoHeader.length))}
+${xSheet("Summary", summaryBody, filterAt(summaryBody, sumHead, sumHeader.length))}
+${xSheet("Contracts", contractBody, filterAt(contractBody, contractHead, contractEntryHeader.length))}
+${xSheet("Trips", tripBody, filterAt(tripBody, tripHead, tripEntryHeader.length))}
+${xSheet("Track", trackBody, filterAt(trackBody, trackHead, trackHeader.length))}
+${xSheet("Payments", payBody, filterAt(payBody, payHead, payHeader.length))}
+${xSheet("Settlements", xfBody, filterAt(xfBody, xfHead, xfHeader.length))}
 </Workbook>`;
   const blob = new Blob(["\uFEFF" + xml], { type: "application/vnd.ms-excel" });
   const a = document.createElement("a");
