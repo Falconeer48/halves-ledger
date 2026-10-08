@@ -3,26 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store" />
   <title>Halves</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231f2833'/%3E%3Cpath d='M9 8h5v7h4V8h5v16h-5v-6h-4v6H9V8z' fill='%23f4f1ea'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23153a58'/%3E%3Cpath d='M9 8h5v7h4V8h5v16h-5v-6h-4v6H9V8z' fill='%236ba8d8'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #f3f1ec;
-      --ink: #1c1b18;
-      --muted: #6b675e;
-      --line: #ddd8ce;
-      --card: #fbfaf7;
-      --paper: #ece8df;
-      --navy: #1f2833;
-      --navy-2: #2a3441;
-      --cream: #ece8df;
+      --bg: #153a58;
+      --ink: #1b2d40;
+      --muted: #5c738a;
+      --line: #c9d7e4;
+      --card: #f3f7fb;
+      --paper: #dce8f2;
+      --navy: #6ba8d8;
+      --navy-2: #82b7e2;
+      --cream: #eef5fb;
+      --page: #e8f0f7;
+      --page-muted: #a9c0d4;
+      --btn: #1e5a8a;
+      --btn-2: #2870a8;
       --owe: #8a4334;
       --credit: #2f4a3c;
       --danger: #8f3d32;
-      --shadow: 0 0 0 1px rgba(28,27,24,.06), 0 1px 2px -1px rgba(28,27,24,.06), 0 2px 4px rgba(28,27,24,.04);
+      --shadow: 0 0 0 1px rgba(21,58,88,.08), 0 1px 2px -1px rgba(21,58,88,.08), 0 8px 24px rgba(10,30,48,.18);
       --display: "Newsreader", Georgia, serif;
       --sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
       --radius: 14px;
@@ -33,7 +38,7 @@
     body {
       font-family: var(--sans);
       background: var(--bg);
-      color: var(--ink);
+      color: var(--page);
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
@@ -46,7 +51,7 @@
     .sidebar {
       width: var(--sidebar);
       background: var(--navy);
-      color: var(--cream);
+      color: #111;
       display: none;
       flex-direction: column;
       padding: 28px 18px 20px;
@@ -55,25 +60,27 @@
       height: 100vh;
       flex-shrink: 0;
     }
-    .brand { font-family: var(--display); font-size: 1.7rem; font-style: italic; color: #f4f1ea; }
-    .brand span { display: block; font-family: var(--sans); font-style: normal; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: #9aa3ad; margin-top: 4px; }
+    .brand { font-family: var(--display); font-size: 1.7rem; font-style: italic; color: #111; }
+    .brand span { display: block; font-family: var(--sans); font-style: normal; font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: #222; margin-top: 4px; }
     .nav { margin-top: 36px; display: flex; flex-direction: column; gap: 4px; }
     .nav a, .nav button.link {
       display: flex; align-items: center; gap: 10px;
-      color: #c5ccd3; padding: 10px 12px; border-radius: 10px;
+      color: #111; padding: 10px 12px; border-radius: 10px;
       background: none; border: 0; text-align: left; font-size: .95rem;
     }
-    .nav a.on, .nav a:hover, .nav button.link:hover { background: var(--navy-2); color: #f4f1ea; }
-    .side-foot { margin-top: auto; padding-top: 20px; font-size: .8rem; color: #9aa3ad; }
+    .nav a.on, .nav a:hover, .nav button.link:hover { background: var(--navy-2); color: #111; }
+    .side-foot { margin-top: auto; padding-top: 20px; font-size: .8rem; color: #111; }
     .main { flex: 1; min-width: 0; padding: 28px 22px 96px; max-width: 980px; }
-    .page-kicker { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-    .page-title { font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.6rem); margin: 6px 0 8px; line-height: 1.15; }
-    .lede { color: var(--muted); max-width: 40rem; margin-bottom: 24px; }
+    .page-kicker { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--page-muted); font-weight: 600; }
+    .page-title { font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.6rem); margin: 6px 0 8px; line-height: 1.15; color: var(--page); }
+    .lede { color: var(--page-muted); max-width: 40rem; margin-bottom: 24px; }
+    label.check { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0; font-size: .95rem; color: var(--ink); }
     .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     .grid { display: grid; gap: 14px; }
     .cards { display: grid; gap: 14px; grid-template-columns: 1fr; }
     .card {
       background: var(--card);
+      color: var(--ink);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 18px 18px 16px;
@@ -92,11 +99,13 @@
     .pill.even { background: #e4ece7; color: var(--credit); }
     .btn {
       border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 600;
-      background: var(--navy); color: #f4f1ea; font-size: .92rem;
+      background: var(--btn); color: #f4f8fc; font-size: .92rem;
     }
-    .btn:hover { background: var(--navy-2); }
-    .btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
-    .btn.ghost:hover { background: var(--paper); }
+    .btn:hover { background: var(--btn-2); }
+    .btn.ghost { background: transparent; color: var(--page); box-shadow: inset 0 0 0 1px rgba(232,240,247,.35); }
+    .btn.ghost:hover { background: rgba(255,255,255,.08); }
+    .card .btn.ghost, .dialog .btn.ghost { color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+    .card .btn.ghost:hover, .dialog .btn.ghost:hover { background: var(--paper); }
     .btn.danger { background: var(--danger); }
     .btn.sm { padding: 7px 11px; font-size: .82rem; }
     .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 20px; }
@@ -108,20 +117,20 @@
     .row-end { text-align: right; flex-shrink: 0; }
     .row-acts { display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; }
     .progress { height: 6px; background: var(--paper); border-radius: 99px; overflow: hidden; margin: 10px 0 6px; }
-    .progress > i { display: block; height: 100%; background: var(--navy); border-radius: 99px; }
+    .progress > i { display: block; height: 100%; background: var(--btn); border-radius: 99px; }
     table { width: 100%; border-collapse: collapse; font-size: .92rem; }
-    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th, td { text-align: center; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
     th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
     .bottom {
       position: fixed; left: 0; right: 0; bottom: 0;
-      background: var(--navy); display: flex; justify-content: space-around;
+      background: var(--btn); display: flex; justify-content: space-around;
       padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
       z-index: 20;
     }
     .bottom a {
-      color: #9aa3ad; font-size: .68rem; font-weight: 600; letter-spacing: .04em;
-      text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 4px;
-      padding: 6px 8px; min-width: 56px;
+      color: #9aa3ad; font-size: .6rem; font-weight: 600; letter-spacing: .03em;
+      text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 6px 4px; min-width: 0; flex: 1;
     }
     .bottom a.on { color: #f4f1ea; }
     .overlay {
@@ -130,10 +139,10 @@
     }
     .overlay.open { display: flex; }
     .dialog {
-      background: var(--card); width: min(520px, 100%);
+      background: var(--card); color: var(--ink); width: min(520px, 100%);
       border-radius: 18px 18px 12px 12px; padding: 22px 20px 18px;
       max-height: min(88vh, 720px); overflow: auto;
-      box-shadow: 0 20px 50px rgba(28,27,24,.25);
+      box-shadow: 0 20px 50px rgba(10,30,48,.35);
     }
     .dialog h2 { font-size: 1.55rem; margin-bottom: 14px; }
     label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin: 12px 0 6px; letter-spacing: .04em; text-transform: uppercase; }
@@ -144,9 +153,27 @@
     textarea { min-height: 72px; resize: vertical; }
     .split { display: flex; gap: 8px; align-items: center; }
     .empty { padding: 28px 8px; color: var(--muted); }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 18px; }
-    .stats > div { background: var(--paper); border-radius: 12px; padding: 12px; }
-    .stats .lbl { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 18px; text-align: center; }
+    .stats > div { background: var(--paper); border-radius: 12px; padding: 12px; color: #111; }
+    .stats .lbl { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: #333; font-weight: 600; }
+    .stats .amount { color: #111; }
+    .stats.people { grid-template-columns: 1fr 1fr; }
+    .stats.people.three { grid-template-columns: 1fr 1fr 1fr; }
+    .stats.four { grid-template-columns: 1fr 1fr; }
+    .remain-pills { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .pnl-table td.amt, .pnl-table th.amt { text-align: right; font-variant-numeric: tabular-nums; }
+    .pnl-table tr.section td { text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; color: var(--muted); font-weight: 700; background: var(--paper); text-align: left; }
+    .who-summary .amount { font-size: 1.15rem; }
+    .pnl-table tr.total td { font-weight: 700; background: var(--paper); }
+    .pnl-table tr.profit td { font-weight: 700; }
+    .pnl-table td.name { text-align: left; }
+    .alloc-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+    .alloc-row input[type="checkbox"] { width: 22px; height: 22px; flex-shrink: 0; margin: 0; accent-color: var(--btn); }
+    .alloc-row input[type="number"] { width: 118px; flex-shrink: 0; }
+    .alloc-row input[type="number"]:disabled { opacity: .45; }
+    .alloc-copy { flex: 1; min-width: 0; display: flex; gap: 10px; align-items: center; cursor: pointer; }
+    .alloc-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 8px; }
+    .alloc-head button { background: none; border: 0; color: var(--btn); font-weight: 700; font-size: .78rem; padding: 0; text-transform: uppercase; letter-spacing: .04em; }
     .fx-box strong { font-variant-numeric: tabular-nums; }
     @media (min-width: 860px) {
       .sidebar { display: flex; }
@@ -154,6 +181,7 @@
       .main { padding: 40px 48px 64px; }
       .cards { grid-template-columns: 1fr 1fr; }
       .cards.three { grid-template-columns: 1fr 1fr 1fr; }
+      .stats.four { grid-template-columns: repeat(4, 1fr); }
       .overlay { align-items: center; }
       .dialog { border-radius: 18px; }
     }
@@ -166,7 +194,8 @@
   </style>
 </head>
 <body>
-  <div class="app">
+<!-- halves-build still-xfer-2026-10-08 -->
+<div class="app">
     <aside class="sidebar">
       <div class="brand">Halves<span id="side-property">Household ledger</span></div>
       <nav class="nav" id="side-nav"></nav>
@@ -178,7 +207,7 @@
   <div class="overlay" id="overlay" role="dialog" aria-modal="true"></div>
 
 <script>
-const KEY = "halves-ledger-v1";
+const KEY = "halves-ledger-v2";
 const FX_KEY = "halves-fx-v1";
 const CURRENCIES = ["ZAR","USD","EUR","GBP","AUD","CAD","NZD"];
 const ICONS = {
@@ -186,86 +215,303 @@ const ICONS = {
   scroll: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 6h11v13a2 2 0 0 1-2 2H8a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2h12"/><path d="M8 10h8M8 14h6"/></svg>',
   house: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21H3V10.5z"/><path d="M9 21v-8h6v8"/></svg>',
   palm: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 22V11"/><path d="M12 11c-2-5-7-6-9-5 3 3 4 5 4 8"/><path d="M12 11c2-5 7-6 9-5-3 3-4 5-4 8"/><path d="M8 22h8"/></svg>',
+  coin: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v10M9.5 9.5c.6-.8 1.5-1.2 2.5-1.2 1.6 0 2.8 1 2.8 2.4 0 2.8-5.3 1.6-5.3 4.2 0 1.3 1.2 2.4 2.8 2.4 1.1 0 2-.5 2.6-1.3"/></svg>',
   report: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M7 3h8l5 5v13H7V3z"/><path d="M15 3v5h5M9 13h8M9 17h5"/></svg>',
   gear: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a7.7 7.7 0 0 0 .1-1.8l2-1.2-2-3.4-2.3.5a7.6 7.6 0 0 0-1.5-.9L15 4h-4l-.7 2.6c-.5.2-1 .5-1.5.9L6.5 7l-2 3.4 2 1.2a7.7 7.7 0 0 0 0 1.8l-2 1.2 2 3.4 2.3-.5c.5.4 1 .7 1.5.9L11 20h4l.7-2.6c.5-.2 1-.5 1.5-.9l2.3.5 2-3.4-2-1.2z"/></svg>'
 };
 
 const DEMO = {
-  people: { a: { id: "a", name: "Alex" }, b: { id: "b", name: "Sam" } },
-  settings: { propertyName: "Willow House", currency: "ZAR" },
-  contracts: [
-    { id: "c-solar", name: "Solar array", vendor: "Helio & Co.", totalCents: 1840000, notes: "14.2 kW rooftop. Final invoice on commissioning.", createdAt: "2026-03-01T10:00:00.000Z" },
-    { id: "c-drive", name: "Driveway reseal", vendor: "PaveRight", totalCents: 280000, notes: "Full reseal, April 2026.", createdAt: "2026-04-02T10:00:00.000Z" }
+  "people": {
+    "a": {
+      "id": "a",
+      "name": "Ian"
+    },
+    "b": {
+      "id": "b",
+      "name": "Trudie"
+    }
+  },
+  "settings": {
+    "propertyName": "205 Palm Brooke",
+    "currency": "ZAR"
+  },
+  "contracts": [
+    {
+      "id": "23f7864c-6fc9-4f34-8497-a852f6366c65",
+      "name": "Formidable Paints",
+      "vendor": "Formidable Paints",
+      "totalCents": 3868800,
+      "notes": "Painting of all interior walls",
+      "createdAt": "2026-09-18T07:58:22.262Z"
+    },
+    {
+      "id": "44acb072-60ad-4eaa-a10e-2127bdafbb70",
+      "name": "Cardinal Floors",
+      "vendor": "Cardinal Floors",
+      "totalCents": 4172300,
+      "notes": "Vinyl Flooring contract",
+      "createdAt": "2026-09-18T08:29:23.535Z"
+    }
   ],
-  house: [
-    { id: "h-rates", name: "Rates & taxes", notes: "Annual property rates.", createdAt: "2026-01-01T10:00:00.000Z" },
-    { id: "h-ins", name: "Home insurance", notes: "Building and contents.", createdAt: "2026-01-01T10:00:00.000Z" },
-    { id: "h-util", name: "Utilities", notes: "Electricity, water, waste.", createdAt: "2026-01-01T10:00:00.000Z" },
-    { id: "h-maint", name: "Maintenance", notes: "Repairs and upkeep.", createdAt: "2026-01-01T10:00:00.000Z" }
+  "house": [],
+  "rentals": [],
+  "trips": [
+    {
+      "id": "3c697177-2099-425f-9062-7afd3e2be361",
+      "name": "Europe Nov 2026",
+      "location": "Prague, Warsaw and Berlin",
+      "startDate": "2026-11-22",
+      "endDate": "2026-12-03",
+      "notes": "",
+      "createdAt": "2026-09-18T08:02:27.849Z"
+    }
   ],
-  trips: [
-    { id: "t-or", name: "Oregon Coast", location: "Cannon Beach", startDate: "2026-05-12", endDate: "2026-05-16", notes: "Lodge, meals, hiking.", currency: "USD", createdAt: "2026-04-20T10:00:00.000Z" },
-    { id: "t-mtl", name: "Montreal", location: "Montreal, QC", startDate: "2026-07-03", endDate: "2026-07-06", notes: "City break.", currency: "CAD", createdAt: "2026-05-28T10:00:00.000Z" }
+  "expenses": [
+    {
+      "id": "0f77ef18-e2c3-43d5-9958-de5434c92fb6",
+      "kind": "contract",
+      "targetId": "23f7864c-6fc9-4f34-8497-a852f6366c65",
+      "date": "2026-09-15",
+      "description": "Paint deposit payment Ian for both",
+      "amountCents": 1552250,
+      "paidBy": "a",
+      "splitA": 50,
+      "currency": "ZAR",
+      "fxRate": 1,
+      "fxDate": "2026-09-17",
+      "zarCents": 1552250
+    },
+    {
+      "id": "35a16fbc-5691-40ff-a74f-e82eb8622a85",
+      "kind": "trip",
+      "targetId": "3c697177-2099-425f-9062-7afd3e2be361",
+      "date": "2026-09-18",
+      "description": "Warsaw B&B",
+      "amountCents": 24517,
+      "paidBy": "a",
+      "splitA": 50,
+      "currency": "GBP",
+      "fxRate": 21.7401,
+      "fxDate": "2026-09-17",
+      "zarCents": 533002
+    },
+    {
+      "id": "4618eaab-20df-4908-a3d9-b88e6666fa37",
+      "kind": "trip",
+      "targetId": "3c697177-2099-425f-9062-7afd3e2be361",
+      "date": "2026-09-18",
+      "description": "Ian's flight paid by Trudie",
+      "amountCents": 905500,
+      "paidBy": "b",
+      "splitA": 100,
+      "currency": "ZAR",
+      "fxRate": 1,
+      "fxDate": "2026-09-17",
+      "zarCents": 905500
+    },
+    {
+      "id": "3e11b2e7-56b3-4253-b7e6-4be833158e7a",
+      "kind": "contract",
+      "targetId": "44acb072-60ad-4eaa-a10e-2127bdafbb70",
+      "date": "2026-09-18",
+      "description": "Flooring Deposit paid by Ian",
+      "amountCents": 1552250,
+      "paidBy": "a",
+      "splitA": 100,
+      "currency": "ZAR",
+      "fxRate": 1,
+      "fxDate": "2026-09-17",
+      "zarCents": 1552250
+    },
+    {
+      "id": "63c5df7a-0905-417e-b743-0788c03be1d7",
+      "kind": "contract",
+      "targetId": "44acb072-60ad-4eaa-a10e-2127bdafbb70",
+      "date": "2026-09-18",
+      "description": "Flooring Deposit paid by Trudie",
+      "amountCents": 1460305,
+      "paidBy": "b",
+      "splitA": 0,
+      "currency": "ZAR",
+      "fxRate": 1,
+      "fxDate": "2026-09-18",
+      "zarCents": 1460305
+    },
+    {
+      "id": "f95646a6-8df9-494f-b5fd-b940aa4153d2",
+      "kind": "trip",
+      "targetId": "3c697177-2099-425f-9062-7afd3e2be361",
+      "date": "2026-09-18",
+      "description": "Prague Accomodation paid by Ian",
+      "amountCents": 43582,
+      "paidBy": "a",
+      "splitA": 50,
+      "currency": "GBP",
+      "fxRate": 21.7401,
+      "fxDate": "2026-09-17",
+      "zarCents": 947477
+    }
   ],
-  expenses: [
-    { id:"e1", kind:"contract", targetId:"c-solar", date:"2026-03-12", description:"Deposit", amountCents:460000, paidBy:"a", splitA:50 },
-    { id:"e2", kind:"contract", targetId:"c-solar", date:"2026-06-02", description:"Second installment", amountCents:460000, paidBy:"a", splitA:50 },
-    { id:"e3", kind:"contract", targetId:"c-solar", date:"2026-06-02", description:"Second installment", amountCents:460000, paidBy:"b", splitA:50 },
-    { id:"e4", kind:"contract", targetId:"c-drive", date:"2026-04-18", description:"Full contract payment", amountCents:280000, paidBy:"a", splitA:50 },
-    { id:"e5", kind:"house", targetId:"h-rates", date:"2026-01-15", description:"Annual rates", amountCents:214000, paidBy:"b", splitA:50 },
-    { id:"e6", kind:"house", targetId:"h-ins", date:"2026-02-01", description:"Annual premium", amountCents:168000, paidBy:"a", splitA:50 },
-    { id:"e7", kind:"house", targetId:"h-util", date:"2026-06-30", description:"Electricity — June", amountCents:18600, paidBy:"a", splitA:50 },
-    { id:"e8", kind:"house", targetId:"h-util", date:"2026-06-30", description:"Water — June", amountCents:6400, paidBy:"b", splitA:50 },
-    { id:"e9", kind:"house", targetId:"h-util", date:"2026-07-31", description:"Electricity — July", amountCents:21200, paidBy:"b", splitA:50 },
-    { id:"e10", kind:"house", targetId:"h-util", date:"2026-07-31", description:"Water — July", amountCents:7100, paidBy:"a", splitA:50 },
-    { id:"e11", kind:"house", targetId:"h-util", date:"2026-08-31", description:"Electricity — August", amountCents:19800, paidBy:"a", splitA:50 },
-    { id:"e12", kind:"house", targetId:"h-maint", date:"2026-05-09", description:"Gutter clean", amountCents:48000, paidBy:"b", splitA:50 },
-    { id:"e13", kind:"house", targetId:"h-maint", date:"2026-08-14", description:"Plumber — kitchen tap", amountCents:22000, paidBy:"a", splitA:50 },
-    { id:"e14", kind:"trip", targetId:"t-or", date:"2026-05-11", description:"Lodge, four nights", amountCents:124000, paidBy:"a", splitA:50 },
-    { id:"e15", kind:"trip", targetId:"t-or", date:"2026-05-16", description:"Meals", amountCents:38600, paidBy:"b", splitA:50 },
-    { id:"e16", kind:"trip", targetId:"t-or", date:"2026-05-16", description:"Fuel", amountCents:16400, paidBy:"b", splitA:50 },
-    { id:"e17", kind:"trip", targetId:"t-or", date:"2026-05-14", description:"Haystack Rock tour", amountCents:9500, paidBy:"a", splitA:50 },
-    { id:"e18", kind:"trip", targetId:"t-mtl", date:"2026-05-30", description:"Flights (both)", amountCents:64000, paidBy:"b", splitA:50 },
-    { id:"e19", kind:"trip", targetId:"t-mtl", date:"2026-07-03", description:"Hotel, three nights", amountCents:89000, paidBy:"a", splitA:50 },
-    { id:"e20", kind:"trip", targetId:"t-mtl", date:"2026-07-06", description:"Dinners", amountCents:27500, paidBy:"a", splitA:50 },
-    { id:"e21", kind:"trip", targetId:"t-mtl", date:"2026-07-05", description:"Metro and taxis", amountCents:4800, paidBy:"b", splitA:50 }
-  ],
-  transfers: [
-    { id:"x1", date:"2026-08-01", amountCents:50000, from:"b", to:"a", kind:"overall", targetId:null, notes:"Catch-up on the house" }
-  ]
+  "transfers": []
 };
 
 function emptyLedger() {
   return {
     people: { a: { id: "a", name: "Alex" }, b: { id: "b", name: "Sam" } },
-    settings: { propertyName: "Home", currency: "ZAR" },
-    contracts: [], house: [], trips: [], expenses: [], transfers: []
+    settings: { propertyName: "Home", currency: "ZAR", jointName: "Capitec" },
+    contracts: [], house: [], rentals: [], trips: [], expenses: [], transfers: []
   };
 }
 
 function clone(v) { return JSON.parse(JSON.stringify(v)); }
 
-function load() {
+function looksLikeRentalIncome(h) {
+  if (!h) return false;
+  if (h.rental === "income") return true;
+  if (h.rental === "cost" || h.rental === "off") return false;
+  return /rental paid|rent received|rental income|rent for/i.test(h.name || "");
+}
+function listFor(kind) {
+  if (kind === "contract") return state.contracts;
+  if (kind === "house") return state.house;
+  if (kind === "rental") return state.rentals;
+  if (kind === "trip") return state.trips;
+  return [];
+}
+function itemOf(kind, id) {
+  return listFor(kind).find(x => x.id === id) || null;
+}
+function kindPath(kind) {
+  return { contract: "contracts", house: "house", rental: "rental", trip: "trips" }[kind] || "";
+}
+function kindTitle(kind) {
+  return { contract: "Contracts", house: "House", rental: "Rental income", trip: "Trips" }[kind] || kind;
+}
+
+function normalize(d) {
+  d.house = d.house || d.houseCategories || [];
+  d.contracts = d.contracts || [];
+  d.trips = d.trips || [];
+  d.rentals = d.rentals || [];
+  d.transfers = d.transfers || [];
+  d.expenses = d.expenses || [];
+  d.settings = d.settings || {};
+  if (!d.settings.jointName || /^capitec(\s+rent(al)?)?$/i.test(d.settings.jointName)) d.settings.jointName = "Capitec";
+  const keep = [];
+  let moved = false;
+  for (const h of d.house) {
+    if (looksLikeRentalIncome(h)) {
+      if (!d.rentals.some(r => r.id === h.id)) d.rentals.push({ ...h, rental: "income" });
+      moved = true;
+    } else keep.push(h);
+  }
+  d.house = keep;
+  const rentalIds = new Set(d.rentals.map(r => r.id));
+  for (const e of d.expenses) {
+    if (rentalIds.has(e.targetId) && e.kind !== "rental") {
+      e.kind = "rental";
+      e.income = true;
+      moved = true;
+    }
+  }
+  for (const t of d.transfers) {
+    if (rentalIds.has(t.targetId) && t.kind === "house") {
+      t.kind = "rental";
+      moved = true;
+    }
+  }
+  d._rentalsMoved = moved;
+  return d;
+}
+
+function loadLocal() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return clone(DEMO);
+    if (!raw) return normalize(clone(DEMO));
     const d = JSON.parse(raw);
-    if (!d || !d.people || !d.expenses) return clone(DEMO);
-    d.house = d.house || d.houseCategories || [];
-    d.contracts = d.contracts || [];
-    d.trips = d.trips || [];
-    d.transfers = d.transfers || [];
-    return d;
+    if (!d || !d.people || !d.expenses) return normalize(clone(DEMO));
+    return normalize(d);
   } catch {
-    return clone(DEMO);
+    return normalize(clone(DEMO));
+  }
+}
+
+function pin() {
+  return (localStorage.getItem("halves-pin") || "").trim();
+}
+
+let state = loadLocal();
+let serverOk = false;
+let serverAt = "";
+let saveBusy = false;
+
+function persistable() {
+  const d = clone(state);
+  delete d._rentalsMoved;
+  return d;
+}
+
+async function pullFromServer() {
+  try {
+    const r = await fetch("/api/ledger", { credentials: "same-origin" });
+    if (r.status === 401) {
+      location.replace("/login");
+      return false;
+    }
+    if (!r.ok) return false;
+    const j = await r.json();
+    if (j.ledger && j.ledger.people && Array.isArray(j.ledger.expenses)) {
+      state = normalize(j.ledger);
+      const moved = !!state._rentalsMoved;
+      delete state._rentalsMoved;
+      localStorage.setItem(KEY, JSON.stringify(state));
+      serverOk = true;
+      serverAt = j.updated_at || "";
+      if (moved) await saveToServer();
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+async function saveToServer() {
+  if (saveBusy) return;
+  saveBusy = true;
+  try {
+    const r = await fetch("/api/ledger", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Halves-Pin": pin()
+      },
+      body: JSON.stringify({ ledger: persistable() }),
+      credentials: "same-origin"
+    });
+    if (r.status === 401) {
+      location.replace("/login");
+      return;
+    }
+    if (r.status === 403) {
+      serverOk = false;
+      return;
+    }
+    if (!r.ok) throw new Error("save failed");
+    const j = await r.json();
+    serverOk = true;
+    serverAt = j.updated_at || "";
+  } catch {
+    serverOk = false;
+  } finally {
+    saveBusy = false;
   }
 }
 
 function save() {
-  localStorage.setItem(KEY, JSON.stringify(state));
+  delete state._rentalsMoved;
+  localStorage.setItem(KEY, JSON.stringify(persistable()));
+  saveToServer();
 }
 
-let state = load();
 let fx = loadFx();
 
 function loadFx() {
@@ -316,13 +562,27 @@ function toZarCents(amountCents, currency, rateOverride) {
 function ledgerCents(e) {
   const from = expenseCurrency(e);
   const to = state.settings.currency || "ZAR";
-  if (from === to) return e.amountCents;
-  const zar = e.zarCents != null ? e.zarCents : toZarCents(e.amountCents, from, e.fxRate);
-  if (zar == null) return e.amountCents;
-  if (to === "ZAR") return zar;
-  const rTo = zarPerUnit(to);
-  if (!rTo) return e.amountCents;
-  return Math.round(zar / rTo);
+  let raw;
+  if (from === to) raw = e.amountCents;
+  else {
+    const zar = e.zarCents != null ? e.zarCents : toZarCents(e.amountCents, from, e.fxRate);
+    if (zar == null) raw = e.amountCents;
+    else if (to === "ZAR") raw = zar;
+    else {
+      const rTo = zarPerUnit(to);
+      raw = rTo ? Math.round(zar / rTo) : e.amountCents;
+    }
+  }
+  return isRepayment(e) ? -Math.abs(raw || 0) : raw;
+}
+function isRepayment(e) {
+  return !!(e && e.repayment);
+}
+function isRefundable(item) {
+  if (!item) return false;
+  if (item.refundable === true) return true;
+  if (item.refundable === false) return false;
+  return /deposit/i.test(item.name || "");
 }
 
 async function fetchFx() {
@@ -380,7 +640,31 @@ function prettyDate(iso) {
   const [y,m,d] = iso.split("-").map(Number);
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(y, m-1, d));
 }
-function nameOf(id) { return state.people[id]?.name || id; }
+function jointName() {
+  return (state.settings?.jointName || "Capitec").trim() || "Capitec";
+}
+function nameOf(id) {
+  if (id === "joint") return jointName();
+  return state.people[id]?.name || id;
+}
+function payerOptions(selected) {
+  const sel = selected || "a";
+  return [["a", nameOf("a")], ["b", nameOf("b")], ["joint", jointName()]]
+    .map(([id, label]) => `<option value="${id}" ${sel === id ? "selected" : ""}>${esc(label)}</option>`).join("");
+}
+function rentalRole(item) {
+  if (!item) return "off";
+  if (item.rental === "income" || item.rental === "cost" || item.rental === "off") return item.rental;
+  const n = String(item.name || "");
+  if (/rental paid|rent received|rental income|rent for/i.test(n)) return "income";
+  if (isRefundable(item)) return "off";
+  return "cost";
+}
+function isIncomeExp(e) {
+  if (!e || isRepayment(e)) return false;
+  if (e.kind === "rental" || e.income) return true;
+  return rentalRole(itemForExpense(e)) === "income";
+}
 function dollarsToCents(v) {
   const n = parseFloat(String(v).replace(/,/g, ""));
   if (!isFinite(n) || n < 0) return null;
@@ -388,22 +672,33 @@ function dollarsToCents(v) {
 }
 
 function balance(expenses, transfers) {
-  let total = 0, paidA = 0, paidB = 0, shareA = 0;
+  let total = 0, paidA = 0, paidB = 0, paidJoint = 0, coveredA = 0, coveredB = 0, shareA = 0;
   for (const e of expenses) {
+    if (isIncomeExp(e)) continue;
     const cents = ledgerCents(e);
+    const pct = splitPctA(itemForExpense(e));
+    const partA = Math.round((cents * pct) / 100);
+    const partB = cents - partA;
     total += cents;
-    if (e.paidBy === "a") paidA += cents; else paidB += cents;
-    shareA += Math.round((cents * (e.splitA ?? 50)) / 100);
+    shareA += partA;
+    if (e.paidBy === "a") paidA += cents;
+    else if (e.paidBy === "b") paidB += cents;
+    else if (e.paidBy === "joint") {
+      paidJoint += cents;
+      coveredA += partA;
+      coveredB += partB;
+    } else paidB += cents;
   }
-  let netA = paidA - shareA;
+  let netA = (paidA + coveredA) - shareA;
   for (const t of transfers) {
     if (t.from === "a" && t.to === "b") netA += t.amountCents;
     else if (t.from === "b" && t.to === "a") netA -= t.amountCents;
   }
   const owed = Math.abs(netA);
-  const even = owed < 1;
+  const even = owed < 2;
   return {
-    total, paidA, paidB, shareA, shareB: total - shareA, netA,
+    total, paidA, paidB, paidJoint, coveredA, coveredB,
+    shareA, shareB: total - shareA, netA,
     even,
     debtor: even ? null : (netA > 0 ? "b" : "a"),
     creditor: even ? null : (netA > 0 ? "a" : "b"),
@@ -441,33 +736,148 @@ function stillToPay(totalCents, paidCents) {
   if (totalCents == null) return null;
   return totalCents - (paidCents || 0);
 }
-function remainingLine(totalCents, paidCents) {
-  const left = stillToPay(totalCents, paidCents);
-  if (left == null) return `<div class="muted">Set a contract total to track what is still due to the contractor.</div>`;
-  if (left <= 0) return `<span class="pill even">${left < 0 ? "Overpaid " + esc(money(-left)) : "Paid in full"}</span>`;
-  return `<span class="pill owe">Still to pay ${esc(money(left))}</span>`;
+function remainingLine(item, expenses, transfers) {
+  const r = remainingByPerson(item, expenses, transfers);
+  const stillA = r.stillA;
+  const stillB = r.stillB;
+  const pills = `${stillPersonLine("a", stillA)}${stillPersonLine("b", stillB)}`;
+  const repayPill = r.refundable
+    ? (r.held > 0
+      ? `<span class="pill owe">Still to be repaid ${esc(money(r.held))}</span>`
+      : `<span class="pill even">Repaid in full</span>`)
+    : "";
+  if (!r.hasBudget) return `<div class="remain-pills">${pills}${repayPill}</div>`;
+  if (r.remaining > 0) return `<div class="remain-pills">${pills}<span class="pill owe">Total still ${esc(money(r.remaining))}</span>${repayPill}</div>`;
+  const done = r.refundable
+    ? "Deposit paid to them"
+    : (r.remaining < 0 ? "Overpaid " + money(-r.remaining) : "Paid in full");
+  return `<div class="remain-pills"><span class="pill even">${esc(done)}</span>${pills}${repayPill}</div>`;
 }
-function remainingStats(totalCents, paidCents) {
-  if (totalCents == null) return remainingLine(null);
-  const left = stillToPay(totalCents, paidCents);
-  const pct = totalCents ? Math.min(100, Math.max(0, Math.round((paidCents / totalCents) * 100))) : 0;
-  return `
+function splitPctA(item) {
+  if (item && item.splitA != null && item.splitA !== "") {
+    const n = Number(item.splitA);
+    if (Number.isFinite(n)) return Math.max(0, Math.min(100, n));
+  }
+  return 50;
+}
+function remainingByPerson(item, expenses, transfers) {
+  const list = expenses || [];
+  const xf = transfers || [];
+  const out = list.filter(e => !isRepayment(e) && !isIncomeExp(e));
+  const inn = list.filter(isRepayment);
+  const bal = balance(out, []);
+  const paidA = bal.paidA + (bal.coveredA || 0);
+  const paidB = bal.paidB + (bal.coveredB || 0);
+  const paid = bal.total;
+  const repaid = inn.reduce((s, e) => s + Math.abs(ledgerCents(e)), 0);
+  const pctA = splitPctA(item);
+  const hasBudget = !!(item && item.totalCents != null);
+  const basis = hasBudget ? item.totalCents : paid;
+  const shareA = Math.round((basis * pctA) / 100);
+  const shareB = basis - shareA;
+  const remaining = hasBudget ? item.totalCents - paid : 0;
+  let stillA = shareA - paidA;
+  let stillB = shareB - paidB;
+  let vendorStillA = Math.max(0, stillA);
+  let vendorStillB = Math.max(0, stillB);
+  const R = Math.max(0, remaining);
+  if (hasBudget && vendorStillA + vendorStillB > R) {
+    if (vendorStillA === 0) vendorStillB = R;
+    else if (vendorStillB === 0) vendorStillA = R;
+    else {
+      const s = vendorStillA + vendorStillB;
+      vendorStillA = Math.round((R * vendorStillA) / s);
+      vendorStillB = R - vendorStillA;
+    }
+  }
+  for (const t of xf) {
+    if (t.from === "a" && t.to === "b") { stillA -= t.amountCents; stillB += t.amountCents; }
+    else if (t.from === "b" && t.to === "a") { stillB -= t.amountCents; stillA += t.amountCents; }
+  }
+  return {
+    hasBudget, basis, paid, paidA, paidB, paidJoint: bal.paidJoint || 0,
+    pocketA: bal.paidA, pocketB: bal.paidB, pctA, shareA, shareB,
+    remaining, stillA, stillB, vendorStillA, vendorStillB,
+    repaid, held: paid - repaid, refundable: isRefundable(item)
+  };
+}
+function stillPersonLine(id, cents) {
+  const name = nameOf(id);
+  if (cents > 0) return `<span class="pill owe">${esc(name)} still to pay ${esc(money(cents))}</span>`;
+  if (cents < 0) return `<span class="pill even">${esc(name)} is ahead ${esc(money(-cents))}</span>`;
+  return `<span class="pill even">${esc(name)} paid in full</span>`;
+}
+function remainingStats(item, expenses, kind, transfers) {
+  if (rentalRole(item) === "income") {
+    const receipts = (expenses || []).filter(e => !isRepayment(e));
+    let total = 0, shareA = 0, joint = 0;
+    const pct = splitPctA(item);
+    for (const e of receipts) {
+      const cents = Math.abs(ledgerCents(e));
+      total += cents;
+      shareA += Math.round((cents * pct) / 100);
+      if (e.paidBy === "joint") joint += cents;
+    }
+    return `
     <div class="stats">
-      <div><div class="lbl">Contract total</div><div class="amount">${esc(money(totalCents))}</div></div>
-      <div><div class="lbl">Paid so far</div><div class="amount">${esc(money(paidCents))}</div></div>
-      <div><div class="lbl">Still to pay</div><div class="amount">${left <= 0 ? esc(money(0)) : esc(money(left))}</div></div>
+      <div><div class="lbl">Rent received</div><div class="amount">${esc(money(total))}</div></div>
+      <div><div class="lbl">${esc(nameOf("a"))} share</div><div class="amount">${esc(money(shareA))}</div></div>
+      <div><div class="lbl">${esc(nameOf("b"))} share</div><div class="amount">${esc(money(total - shareA))}</div></div>
     </div>
-    <div class="progress"><i style="width:${pct}%"></i></div>
-    <div style="margin:8px 0 14px">${remainingLine(totalCents, paidCents)}</div>`;
+    <p class="muted">Rental income on the P&amp;L, not a household cost.${joint ? " Received into " + esc(jointName()) + "." : " Record receipts as Paid by " + esc(jointName()) + "."}</p>`;
+  }
+  const r = remainingByPerson(item, expenses, transfers);
+  const totalLabel = kind === "contract" ? "Contract total" : kind === "trip" ? "Trip budget" : (r.refundable ? "Deposit total" : "Expected total");
+  const paidLabel = r.refundable ? "Paid to them" : "Paid so far";
+  const repayBlock = r.refundable ? `
+    <div class="stats">
+      <div><div class="lbl">Repaid to you</div><div class="amount">${esc(money(r.repaid))}</div></div>
+      <div><div class="lbl">Still with them</div><div class="amount">${esc(money(Math.max(0, r.held)))}</div></div>
+    </div>
+  ` : "";
+  const budgetBlock = r.hasBudget ? `
+    <div class="stats">
+      <div><div class="lbl">${totalLabel}</div><div class="amount">${esc(money(r.basis))}</div></div>
+      <div><div class="lbl">${paidLabel}</div><div class="amount">${esc(money(r.paid))}</div></div>
+      <div><div class="lbl">Still to pay them</div><div class="amount">${esc(money(Math.max(0, r.remaining)))}</div></div>
+    </div>
+    <div class="progress"><i style="width:${r.basis ? Math.min(100, Math.max(0, Math.round((r.paid / r.basis) * 100))) : 0}%"></i></div>
+    ${repayBlock}
+  ` : `
+    <div class="stats">
+      <div><div class="lbl">${paidLabel}</div><div class="amount">${esc(money(r.paid))}</div></div>
+      <div><div class="lbl">${esc(nameOf("a"))} paid</div><div class="amount">${esc(money(r.pocketA))}</div></div>
+      <div><div class="lbl">${esc(nameOf("b"))} paid</div><div class="amount">${esc(money(r.pocketB))}</div></div>
+    </div>
+    ${repayBlock}
+  `;
+  const jointStat = r.paidJoint ? `<div><div class="lbl">${esc(jointName())} paid</div><div class="amount">${esc(money(r.paidJoint))}</div></div>` : "";
+  return `${budgetBlock}
+    <div class="stats people${r.paidJoint ? " three" : ""}">
+      <div><div class="lbl">${esc(nameOf("a"))} still to pay</div><div class="amount">${esc(money(Math.max(0, r.stillA)))}</div></div>
+      <div><div class="lbl">${esc(nameOf("b"))} still to pay</div><div class="amount">${esc(money(Math.max(0, r.stillB)))}</div></div>
+      ${jointStat}
+    </div>
+    <div style="margin:8px 0 14px">${remainingLine(item, expenses, transfers)}</div>`;
+}
+function outstandingFor(kind) {
+  const items = kind === "contract" ? state.contracts : kind === "house" ? state.house : kind === "rental" ? state.rentals : state.trips;
+  let due = 0, paid = 0, stillA = 0, stillB = 0, remaining = 0, held = 0;
+  for (const item of items) {
+    const r = remainingByPerson(item, filterExp(kind, item.id), filterXfer(kind, item.id));
+    if (r.hasBudget) {
+      due += r.basis;
+      paid += r.paid;
+      remaining += r.remaining;
+    }
+    stillA += Math.max(0, r.stillA);
+    stillB += Math.max(0, r.stillB);
+    if (r.refundable) held += Math.max(0, r.held);
+  }
+  return { due, paid, remaining, stillA, stillB, held };
 }
 function contractorsOutstanding() {
-  let due = 0, paid = 0;
-  for (const c of state.contracts) {
-    if (c.totalCents == null) continue;
-    due += c.totalCents;
-    paid += contractPaid(c.id);
-  }
-  return { due, paid, remaining: due - paid };
+  return outstandingFor("contract");
 }
 
 function route() {
@@ -481,6 +891,7 @@ function navHtml(active) {
     ["/", "Overview", ICONS.home],
     ["/contracts", "Contracts", ICONS.scroll],
     ["/house", "House", ICONS.house],
+    ["/rental", "Rental", ICONS.coin],
     ["/trips", "Trips", ICONS.palm],
     ["/report", "Report", ICONS.report],
     ["/settings", "Settings", ICONS.gear]
@@ -502,33 +913,45 @@ function openDialog(html) {
 }
 
 function targetsFor(kind) {
-  if (kind === "contract") return state.contracts.map(x => ({ id: x.id, name: x.name }));
-  if (kind === "house") return state.house.map(x => ({ id: x.id, name: x.name }));
-  return state.trips.map(x => ({ id: x.id, name: x.name }));
+  return listFor(kind).map(x => ({ id: x.id, name: x.name }));
 }
 
 function paymentDialog(preset) {
   const existing = preset?.id ? state.expenses.find(e => e.id === preset.id) : null;
   const kind = existing?.kind || preset?.kind || "house";
   const targetId = existing?.targetId || preset?.targetId || "";
+  const repayment = !!(existing?.repayment || preset?.repayment);
+  const startItem = itemOf(kind, targetId);
+  const asIncome = !repayment && (kind === "rental" || existing?.income || rentalRole(startItem) === "income");
+  const rentalish = kind === "rental" || rentalRole(startItem) !== "off";
   const targets = targetsFor(kind);
-  const options = ["contract","house","trip"].map(k => `<option value="${k}" ${k===kind?"selected":""}>${k[0].toUpperCase()+k.slice(1)}</option>`).join("");
+  const options = [["contract","Contract"],["house","House"],["rental","Rental income"],["trip","Trip"]]
+    .map(([k, label]) => `<option value="${k}" ${k===kind?"selected":""}>${label}</option>`).join("");
   const tOpts = targets.map(t => `<option value="${esc(t.id)}" ${targetId===t.id?"selected":""}>${esc(t.name)}</option>`).join("");
-  const paidBy = existing?.paidBy || "a";
+  const paidBy = existing?.paidBy || (rentalish ? "joint" : "a");
   const startCcy = existing?.currency || (kind === "trip" ? (tripOf(targetId)?.currency || "USD") : (state.settings.currency || "ZAR"));
   const startRate = existing?.fxRate != null ? existing.fxRate : (zarPerUnit(startCcy) ?? "");
+  const payerLabel = repayment ? "Received by" : (asIncome ? "Received into" : "Paid by");
+  const help = repayment
+    ? "Enter the positive amount they paid back (for example R10,000 — not −R10,000). Paid in full is only a status after you have paid them, not the repayment itself."
+    : asIncome
+      ? `Rent hitting ${jointName()} is income, split ${startItem?.splitA ?? 50}/${100 - (startItem?.splitA ?? 50)}. It does not create an IOU between you.`
+      : `Who owes whom uses the share % on the contract, house category, or trip. Paid from ${jointName()} still uses that split (usually 50/50) but does not create an IOU — the money already came from joint rental funds.`;
+  const title = existing
+    ? (repayment ? "Edit repayment" : asIncome ? "Edit rental income" : "Edit payment")
+    : (repayment ? "Record repayment" : asIncome ? "Record rental income" : "Add payment");
   openDialog(`
-    <h2>${existing ? "Edit payment" : "Add payment"}</h2>
+    <h2>${title}</h2>
     <form id="pay-form">
       <label>Type</label>
       <select name="kind">${options}</select>
       <label>Against</label>
-      <select name="targetId">${tOpts || "<option value=''>Add a contract, house category, or trip first</option>"}</select>
+      <select name="targetId">${tOpts || "<option value=''>Add a contract, house category, rental, or trip first</option>"}</select>
       <label>Date</label>
       <input type="date" name="date" value="${esc(existing?.date || today())}" required />
       <label>Description</label>
-      <input name="description" placeholder="Deposit, rates, hotel…" required value="${esc(existing?.description || "")}" />
-      <label>Amount</label>
+      <input name="description" placeholder="${repayment ? "Oasis repayment" : asIncome ? "October rent" : "Deposit, rates, hotel…"}" required value="${esc(existing?.description || (repayment ? "Deposit repayment" : ""))}" />
+      <label>${repayment ? "Amount they paid back (positive)" : asIncome ? "Amount received (positive)" : "Amount"}</label>
       <input name="amount" type="number" min="0" step="0.01" placeholder="0.00" required value="${existing ? (existing.amountCents/100).toFixed(2) : ""}" />
       <div id="fx-fields">
         <label>Currency</label>
@@ -538,26 +961,11 @@ function paymentDialog(preset) {
         <div class="fx-box" id="fx-preview"></div>
         <button class="btn ghost sm" type="button" id="fx-refresh" style="margin-top:8px">Refresh live rate</button>
       </div>
-      <label>Paid by</label>
-      <select name="paidBy">
-        <option value="a" ${paidBy==="a"?"selected":""}>${esc(nameOf("a"))}</option>
-        <option value="b" ${paidBy==="b"?"selected":""}>${esc(nameOf("b"))}</option>
-      </select>
-      <label>How to split this payment</label>
-      <select name="splitMode">
-        <option value="half" ${(existing ? existing.splitA : 50) === 50 ? "selected" : ""}>50/50 — one of us paid for both</option>
-        <option value="own" ${existing && ((existing.paidBy === "a" && existing.splitA === 100) || (existing.paidBy === "b" && existing.splitA === 0)) ? "selected" : ""}>Payer’s own share — we each pay our half separately</option>
-        <option value="custom" ${existing && existing.splitA !== 50 && !((existing.paidBy === "a" && existing.splitA === 100) || (existing.paidBy === "b" && existing.splitA === 0)) ? "selected" : ""}>Custom %</option>
-      </select>
-      <div id="custom-split">
-        <label>Share for ${esc(nameOf("a"))} (0–100)</label>
-        <div class="split">
-          <input name="splitA" type="number" min="0" max="100" step="1" value="${existing?.splitA ?? 50}" />
-          <span class="muted">0 = all ${esc(nameOf("b"))}’s. 100 = all ${esc(nameOf("a"))}’s. Zero is allowed.</span>
-        </div>
-      </div>
+      <label>${payerLabel}</label>
+      <select name="paidBy">${payerOptions(paidBy)}</select>
+      <p class="muted">${esc(help)}</p>
       <div class="toolbar" style="margin-top:18px">
-        <button class="btn" type="submit">Save payment</button>
+        <button class="btn" type="submit">${repayment ? "Save repayment" : asIncome ? "Save income" : "Save payment"}</button>
         <button class="btn ghost" type="button" data-act="close">Cancel</button>
         ${existing ? `<button class="btn danger" type="button" id="del-pay-btn">Delete</button>` : ""}
       </div>
@@ -628,23 +1036,10 @@ function paymentDialog(preset) {
     syncFx();
   });
   syncFx();
-  const toggleSplit = () => {
-    document.getElementById("custom-split").style.display = form.splitMode.value === "custom" ? "block" : "none";
-  };
-  form.splitMode.addEventListener("change", toggleSplit);
-  toggleSplit();
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const cents = dollarsToCents(form.amount.value);
     if (cents == null || !form.targetId.value) return;
-    const mode = form.splitMode.value;
-    let splitA;
-    if (mode === "half") splitA = 50;
-    else if (mode === "own") splitA = form.paidBy.value === "a" ? 100 : 0;
-    else {
-      const n = Number(form.splitA.value);
-      splitA = Math.max(0, Math.min(100, Number.isFinite(n) ? n : 50));
-    }
     const ccy = form.currency.value || state.settings.currency;
     const rate = Number(form.fxRate.value);
     const zar = toZarCents(cents, ccy, rate);
@@ -656,7 +1051,9 @@ function paymentDialog(preset) {
       description: form.description.value.trim(),
       amountCents: cents,
       paidBy: form.paidBy.value,
-      splitA,
+      splitA: existing?.splitA ?? 50,
+      repayment,
+      income: !repayment && (form.kind.value === "rental" || rentalRole(itemOf(form.kind.value, form.targetId.value)) === "income"),
       currency: ccy,
       fxRate: ccy === "ZAR" ? 1 : (rate || null),
       fxDate: fx.date || today(),
@@ -674,14 +1071,34 @@ function paymentDialog(preset) {
   });
 }
 
+function iouBuckets() {
+  const items = [];
+  for (const c of state.contracts) {
+    const bal = balance(filterExp("contract", c.id), filterXfer("contract", c.id));
+    if (!bal.even) items.push({ kind: "contract", id: c.id, name: "Contract · " + c.name, bal });
+  }
+  for (const h of state.house) {
+    if (rentalRole(h) === "income") continue;
+    const bal = balance(filterExp("house", h.id), filterXfer("house", h.id));
+    if (!bal.even) items.push({ kind: "house", id: h.id, name: "House · " + h.name, bal });
+  }
+  for (const t of state.trips) {
+    const bal = balance(filterExp("trip", t.id), filterXfer("trip", t.id));
+    if (!bal.even) items.push({ kind: "trip", id: t.id, name: "Trip · " + t.name, bal });
+  }
+  return items;
+}
+
 function settleDialog(preset) {
   const existing = preset?.id ? state.transfers.find(t => t.id === preset.id) : null;
-  const fromId = existing?.from || "a";
-  const toId = existing?.to || "b";
+  const overall = balance(state.expenses, state.transfers);
+  const fromId = existing?.from || overall.debtor || "a";
+  const toId = existing?.to || overall.creditor || "b";
   const scope = existing?.kind || "overall";
+  const startAmt = existing ? (existing.amountCents / 100).toFixed(2) : (overall.even ? "" : (overall.owed / 100).toFixed(2));
   openDialog(`
     <h2>${existing ? "Edit transfer" : "Settle up"}</h2>
-    <p class="muted">Record a transfer so the balance updates.</p>
+    <p class="muted">${existing ? "Change this one transfer." : "If someone pays two (or more) outstanding amounts in one lump sum, tick those lines. The total fills in from what you tick. Turn off “offset specific amounts” to keep a single overall transfer."}</p>
     <form id="settle-form">
       <label>Date</label>
       <input type="date" name="date" value="${esc(existing?.date || today())}" required />
@@ -696,7 +1113,8 @@ function settleDialog(preset) {
         <option value="a" ${toId==="a"?"selected":""}>${esc(nameOf("a"))}</option>
       </select>
       <label>Amount</label>
-      <input name="amount" type="number" min="0" step="0.01" required value="${existing ? (existing.amountCents/100).toFixed(2) : ""}" />
+      <input name="amount" type="number" min="0" step="0.01" required value="${startAmt}" />
+      ${existing ? `
       <label>Apply to</label>
       <select name="scope">
         <option value="overall" ${scope==="overall"?"selected":""}>Overall balance</option>
@@ -706,40 +1124,196 @@ function settleDialog(preset) {
       </select>
       <label>If scoped, pick one</label>
       <select name="targetId"><option value="">—</option></select>
+      ` : `
+      <label class="check"><input type="checkbox" name="splitAlloc" checked /><span>Offset specific outstanding amounts</span></label>
+      <div id="alloc-wrap">
+        <div class="alloc-head">
+          <span>Tick what this payment covers</span>
+          <span>
+            <button type="button" id="alloc-all">Tick all</button>
+            ·
+            <button type="button" id="alloc-none">Clear</button>
+          </span>
+        </div>
+        <div id="alloc-box"></div>
+        <p class="muted" id="alloc-remain"></p>
+      </div>
+      `}
       <label>Note</label>
       <input name="notes" placeholder="Optional" value="${esc(existing?.notes || "")}" />
       <div class="toolbar" style="margin-top:18px">
-        <button class="btn" type="submit">Save transfer</button>
+        <button class="btn" type="submit">${existing ? "Save transfer" : "Save settlement"}</button>
         <button class="btn ghost" type="button" data-act="close">Cancel</button>
         ${existing ? `<button class="btn danger" type="button" id="del-xfer-btn">Delete</button>` : ""}
       </div>
     </form>
   `);
   const form = document.getElementById("settle-form");
-  const fill = () => {
+  const fillTargets = () => {
+    if (!form.scope) return;
     const k = form.scope.value;
     const t = k === "overall" ? [] : targetsFor(k);
     const selected = existing?.targetId || "";
     form.targetId.innerHTML = `<option value="">—</option>` + t.map(x => `<option value="${esc(x.id)}" ${selected===x.id?"selected":""}>${esc(x.name)}</option>`).join("");
   };
-  form.scope.addEventListener("change", fill);
-  fill();
+  const readAmt = () => dollarsToCents(form.amount.value) || 0;
+  const tickedParts = () => {
+    const parts = [];
+    document.querySelectorAll("#alloc-box .alloc-pick:checked").forEach(cb => {
+      const row = cb.closest(".alloc-row");
+      const inp = row?.querySelector(".alloc-amt");
+      const c = dollarsToCents(inp?.value) || 0;
+      if (!c) return;
+      parts.push({ kind: cb.getAttribute("data-kind"), targetId: cb.getAttribute("data-id"), amountCents: c });
+    });
+    return parts;
+  };
+  const tickedTotal = () => tickedParts().reduce((s, p) => s + p.amountCents, 0);
+  const syncAmountFromTicks = () => {
+    if (!form.splitAlloc || !form.splitAlloc.checked) return;
+    const used = tickedTotal();
+    form.amount.value = used ? (used / 100).toFixed(2) : "";
+  };
+  const updateRemain = () => {
+    const el = document.getElementById("alloc-remain");
+    if (!el) return;
+    const n = document.querySelectorAll("#alloc-box .alloc-pick:checked").length;
+    const amt = readAmt();
+    const used = tickedTotal();
+    const rem = amt - used;
+    if (!n) {
+      el.textContent = "Tick the outstanding amounts this lump sum is meant to pay.";
+      el.className = "muted";
+    } else if (rem < 0) {
+      el.textContent = money(-rem) + " over the payment — reduce a ticked line or raise the total.";
+      el.className = "muted owe";
+    } else if (rem === 0) {
+      el.textContent = n === 1 ? "This payment covers the ticked amount." : "This payment covers the " + n + " ticked amounts.";
+      el.className = "muted";
+    } else {
+      el.textContent = money(rem) + " leftover stays on overall.";
+      el.className = "muted";
+    }
+  };
+  const setRow = (cb, on) => {
+    cb.checked = on;
+    const inp = cb.closest(".alloc-row")?.querySelector(".alloc-amt");
+    if (!inp) return;
+    inp.disabled = !on;
+    inp.value = on ? (Number(cb.getAttribute("data-owed") || 0) / 100).toFixed(2) : "0.00";
+  };
+  const paintAlloc = () => {
+    const box = document.getElementById("alloc-box");
+    const wrap = document.getElementById("alloc-wrap");
+    if (!box || !wrap) return;
+    const splitOn = !form.splitAlloc || form.splitAlloc.checked;
+    wrap.style.display = splitOn ? "block" : "none";
+    if (!splitOn) return;
+    const from = form.from.value;
+    const to = form.to.value;
+    const items = iouBuckets().filter(it => it.bal.debtor === from && it.bal.creditor === to);
+    if (!items.length) {
+      box.innerHTML = `<p class="muted" style="margin:8px 0">No open House, Contract, or Trip balances this way. The whole amount will sit on overall.</p>`;
+      updateRemain();
+      return;
+    }
+    box.innerHTML = items.map(it => `
+      <div class="alloc-row">
+        <label class="alloc-copy">
+          <input type="checkbox" class="alloc-pick" data-kind="${esc(it.kind)}" data-id="${esc(it.id)}" data-owed="${it.bal.owed}" />
+          <span>
+            <div>${esc(it.name)}</div>
+            <div class="muted">${esc(nameOf(it.bal.debtor))} owes ${esc(money(it.bal.owed))}</div>
+          </span>
+        </label>
+        <input type="number" class="alloc-amt" min="0" step="0.01" value="0.00" disabled />
+      </div>`).join("");
+    box.querySelectorAll(".alloc-pick").forEach(cb => cb.addEventListener("change", () => {
+      setRow(cb, cb.checked);
+      syncAmountFromTicks();
+      updateRemain();
+    }));
+    box.querySelectorAll(".alloc-amt").forEach(inp => inp.addEventListener("input", () => {
+      syncAmountFromTicks();
+      updateRemain();
+    }));
+    updateRemain();
+  };
+  if (form.scope) {
+    form.scope.addEventListener("change", fillTargets);
+    fillTargets();
+  }
+  if (!existing) {
+    form.from.addEventListener("change", paintAlloc);
+    form.to.addEventListener("change", paintAlloc);
+    form.amount.addEventListener("input", updateRemain);
+    if (form.splitAlloc) form.splitAlloc.addEventListener("change", paintAlloc);
+    document.getElementById("alloc-all")?.addEventListener("click", () => {
+      document.querySelectorAll("#alloc-box .alloc-pick").forEach(cb => setRow(cb, true));
+      syncAmountFromTicks();
+      updateRemain();
+    });
+    document.getElementById("alloc-none")?.addEventListener("click", () => {
+      document.querySelectorAll("#alloc-box .alloc-pick").forEach(cb => setRow(cb, false));
+      syncAmountFromTicks();
+      updateRemain();
+    });
+    paintAlloc();
+  }
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const cents = dollarsToCents(form.amount.value);
     if (cents == null || form.from.value === form.to.value) return;
-    const row = {
-      id: existing?.id || uid(),
-      date: form.date.value,
-      amountCents: cents,
-      from: form.from.value,
-      to: form.to.value,
-      kind: form.scope.value,
-      targetId: form.targetId.value || null,
-      notes: form.notes.value.trim()
-    };
-    if (existing) state.transfers = state.transfers.map(x => x.id === existing.id ? row : x);
-    else state.transfers.push(row);
+    const date = form.date.value;
+    const notes = form.notes.value.trim();
+    if (existing) {
+      const row = {
+        id: existing.id, date, amountCents: cents,
+        from: form.from.value, to: form.to.value,
+        kind: form.scope.value, targetId: form.targetId.value || null, notes
+      };
+      state.transfers = state.transfers.map(x => x.id === existing.id ? row : x);
+      save(); closeDialog(); render();
+      return;
+    }
+    const splitOn = form.splitAlloc && form.splitAlloc.checked;
+    if (!splitOn) {
+      state.transfers.push({
+        id: uid(), date, amountCents: cents,
+        from: form.from.value, to: form.to.value,
+        kind: "overall", targetId: null, notes
+      });
+      save(); closeDialog(); render();
+      return;
+    }
+    const parts = tickedParts();
+    const used = parts.reduce((s, p) => s + p.amountCents, 0);
+    if (!parts.length) {
+      alert("Tick the outstanding amounts this payment is meant to cover.");
+      return;
+    }
+    if (used > cents) {
+      alert("The ticked amounts add up to more than the payment. Untick a line or raise the total.");
+      return;
+    }
+    const batchId = uid();
+    const label = notes || ("Settle-up split of " + money(cents));
+    for (const p of parts) {
+      state.transfers.push({
+        id: uid(), date, amountCents: p.amountCents,
+        from: form.from.value, to: form.to.value,
+        kind: p.kind, targetId: p.targetId, notes: label, batchId
+      });
+    }
+    const rem = cents - used;
+    if (rem > 0) {
+      state.transfers.push({
+        id: uid(), date, amountCents: rem,
+        from: form.from.value, to: form.to.value,
+        kind: "overall", targetId: null, notes: label, batchId
+      });
+    }
+    if (!parts.length && rem <= 0) return;
     save(); closeDialog(); render();
   });
   const del = document.getElementById("del-xfer-btn");
@@ -751,18 +1325,30 @@ function settleDialog(preset) {
 }
 
 function entityDialog(kind, existing) {
-  const titles = { contract: "Contract", house: "House cost", trip: "Trip" };
+  const titles = { contract: "Contract", house: "House cost", trip: "Trip", rental: "Rental income" };
   const isTrip = kind === "trip";
   const isCon = kind === "contract";
+  const isRent = kind === "rental";
   openDialog(`
     <h2>${existing ? "Edit" : "New"} ${titles[kind]}</h2>
     <form id="ent-form">
       <label>Name</label>
       <input name="name" required value="${esc(existing?.name || "")}" />
-      ${isCon ? `<label>Vendor</label><input name="vendor" value="${esc(existing?.vendor || "")}" />
-        <label>Contract total (amount due to the contractor)</label><input name="total" type="number" min="0" step="0.01" value="${existing?.totalCents != null ? (existing.totalCents/100).toFixed(2) : ""}" />
-        <p class="muted">Used to show what is still left to pay on this contract.</p>` : ""}
-      ${kind === "house" ? `<label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
+      ${isCon ? `<label>Vendor</label><input name="vendor" value="${esc(existing?.vendor || "")}" />` : ""}
+      <label>${isCon ? "Contract total (amount due to the contractor)" : isTrip ? "Expected trip budget (optional)" : isRent ? "Expected monthly rent (optional)" : "Expected total (optional)"}</label>
+      <input name="total" type="number" min="0" step="0.01" value="${existing?.totalCents != null ? (existing.totalCents/100).toFixed(2) : ""}" />
+      <label>${esc(nameOf("a"))}’s share of this total (%)</label>
+      <input name="splitA" type="number" min="0" max="100" step="1" value="${existing?.splitA ?? 50}" />
+      <p class="muted">${isCon ? "Who owes whom and still-to-pay both use this share, then subtract what each of you has already paid the contractor." : isRent ? "Rent received into " + jointName() + " is income on the P&L, split at this share. It does not create an IOU." : "Who owes whom is this share of what was spent, minus what each of you paid. Leave the total blank if you only want to track spend. For a refundable deposit, 100% is fine if only one of you paid it."}</p>
+      ${kind === "house" ? `<label class="check"><input type="checkbox" name="refundable" ${isRefundable(existing) ? "checked" : ""} /><span>Refundable deposit — they will pay this back later (Oasis-style). Need not be 50/50. Stays off the P&amp;L.</span></label>
+      <label>Rental P&amp;L</label>
+      <select name="rental">
+        <option value="cost" ${rentalRole(existing) === "cost" ? "selected" : ""}>Cost (claimable — rates, utilities, Oasis, painting, floors)</option>
+        <option value="off" ${rentalRole(existing) === "off" ? "selected" : ""}>Do not include</option>
+      </select>
+      <p class="muted">House costs show on the rental P&amp;L by default. Record rent under Rental income, not here. Paid from ${esc(jointName())} still splits at the share above, with no IOU.</p>
+      <label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
+      ${isRent ? `<label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
       ${isTrip ? `<label>Location</label><input name="location" value="${esc(existing?.location || "")}" />
         <label>Trip currency</label>
         <select name="currency">${currencyOpts(existing?.currency || "USD")}</select>
@@ -770,7 +1356,13 @@ function entityDialog(kind, existing) {
         <label>Start</label><input type="date" name="startDate" value="${esc(existing?.startDate || "")}" />
         <label>End</label><input type="date" name="endDate" value="${esc(existing?.endDate || "")}" />
         <label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
-      ${isCon ? `<label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
+      ${isCon ? `<label>Rental P&amp;L</label>
+      <select name="rental">
+        <option value="cost" ${rentalRole(existing) !== "off" ? "selected" : ""}>Cost (claimable — painting, floors, other contracts)</option>
+        <option value="off" ${rentalRole(existing) === "off" ? "selected" : ""}>Do not include</option>
+      </select>
+      <p class="muted">Contract payments already made show as costs on the P&amp;L (your share each). Refundable deposits do not.</p>
+      <label>Notes</label><textarea name="notes">${esc(existing?.notes || "")}</textarea>` : ""}
       <div class="toolbar" style="margin-top:18px">
         <button class="btn" type="submit">Save</button>
         <button class="btn ghost" type="button" data-act="close">Cancel</button>
@@ -783,17 +1375,23 @@ function entityDialog(kind, existing) {
     e.preventDefault();
     const name = form.name.value.trim();
     if (!name) return;
+    const total = form.total.value ? dollarsToCents(form.total.value) : null;
+    const splitRaw = Number(form.splitA.value);
+    const splitA = Number.isFinite(splitRaw) ? Math.max(0, Math.min(100, splitRaw)) : 50;
     if (kind === "contract") {
-      const total = form.total.value ? dollarsToCents(form.total.value) : null;
-      const row = { id: existing?.id || uid(), name, vendor: form.vendor.value.trim(), totalCents: total, notes: form.notes.value.trim(), createdAt: existing?.createdAt || new Date().toISOString() };
+      const row = { id: existing?.id || uid(), name, vendor: form.vendor.value.trim(), totalCents: total, splitA, notes: form.notes.value.trim(), rental: form.rental ? form.rental.value : "cost", createdAt: existing?.createdAt || new Date().toISOString() };
       if (existing) state.contracts = state.contracts.map(x => x.id === existing.id ? row : x);
       else state.contracts.push(row);
     } else if (kind === "house") {
-      const row = { id: existing?.id || uid(), name, notes: form.notes.value.trim(), createdAt: existing?.createdAt || new Date().toISOString() };
+      const row = { id: existing?.id || uid(), name, notes: form.notes.value.trim(), totalCents: total, splitA, refundable: !!(form.refundable && form.refundable.checked), rental: form.rental ? form.rental.value : "cost", createdAt: existing?.createdAt || new Date().toISOString() };
       if (existing) state.house = state.house.map(x => x.id === existing.id ? row : x);
       else state.house.push(row);
+    } else if (kind === "rental") {
+      const row = { id: existing?.id || uid(), name, notes: form.notes.value.trim(), totalCents: total, splitA, rental: "income", createdAt: existing?.createdAt || new Date().toISOString() };
+      if (existing) state.rentals = state.rentals.map(x => x.id === existing.id ? row : x);
+      else state.rentals.push(row);
     } else {
-      const row = { id: existing?.id || uid(), name, location: form.location.value.trim(), startDate: form.startDate.value, endDate: form.endDate.value, notes: form.notes.value.trim(), currency: form.currency.value || "USD", createdAt: existing?.createdAt || new Date().toISOString() };
+      const row = { id: existing?.id || uid(), name, location: form.location.value.trim(), startDate: form.startDate.value, endDate: form.endDate.value, notes: form.notes.value.trim(), currency: form.currency.value || "USD", totalCents: total, splitA, createdAt: existing?.createdAt || new Date().toISOString() };
       if (existing) state.trips = state.trips.map(x => x.id === existing.id ? row : x);
       else state.trips.push(row);
     }
@@ -808,12 +1406,15 @@ function entityDialog(kind, existing) {
     }
     if (kind === "contract") state.contracts = state.contracts.filter(x => x.id !== existing.id);
     if (kind === "house") state.house = state.house.filter(x => x.id !== existing.id);
+    if (kind === "rental") state.rentals = state.rentals.filter(x => x.id !== existing.id);
     if (kind === "trip") state.trips = state.trips.filter(x => x.id !== existing.id);
-    save(); closeDialog(); location.hash = "#/" + (kind === "house" ? "house" : kind === "trip" ? "trips" : "contracts");
+    save(); closeDialog(); location.hash = "#/" + (kindPath(kind) || "contracts");
   });
 }
 
 function splitLabel(e) {
+  if (isRepayment(e)) return "repayment to " + nameOf(e.paidBy);
+  if (isIncomeExp(e)) return "income · " + ((e.splitA ?? splitPctA(itemForExpense(e))) === 50 ? "50/50" : `split ${e.splitA ?? 50}/${100 - (e.splitA ?? 50)}`);
   const a = e.splitA ?? 50;
   if (a === 50) return "50/50";
   if ((e.paidBy === "a" && a === 100) || (e.paidBy === "b" && a === 0)) return "own share";
@@ -832,12 +1433,21 @@ function expenseRows(list) {
   return list.slice().sort((a,b) => b.date.localeCompare(a.date) || (b.id > a.id ? 1 : -1)).map(e => `
     <div class="list-row">
       <div>
-        <div>${esc(e.description)}</div>
-        <div class="muted">${prettyDate(e.date)} · ${esc(nameOf(e.paidBy))} paid · ${esc(splitLabel(e))}${expenseCurrency(e) && expenseCurrency(e) !== (state.settings.currency||"ZAR") ? " · " + moneyIn(e.amountCents, expenseCurrency(e)) : ""}${e.kind === "contract" ? (() => { const c = state.contracts.find(x => x.id === e.targetId); const left = c ? stillToPay(c.totalCents, contractPaid(c.id)) : null; return left == null ? "" : (left <= 0 ? " · paid in full" : " · still to pay " + money(left)); })() : ""}</div>
+        <div>${esc(e.description)}${isRepayment(e) ? " <span class=\"credit\">(repayment)</span>" : isIncomeExp(e) ? " <span class=\"credit\">(income)</span>" : ""}</div>
+        <div class="muted">${prettyDate(e.date)} · ${esc(isIncomeExp(e) ? nameOf(e.paidBy) + " received" : isRepayment(e) ? nameOf(e.paidBy) + " received" : nameOf(e.paidBy) + " paid")} · ${esc(splitLabel(e))}${expenseCurrency(e) && expenseCurrency(e) !== (state.settings.currency||"ZAR") ? " · " + moneyIn(e.amountCents, expenseCurrency(e)) : ""}${(() => {
+          const item = itemOf(e.kind, e.targetId);
+          if (!item) return "";
+          const r = remainingByPerson(item, filterExp(e.kind, e.targetId), filterXfer(e.kind, e.targetId));
+          if (r.refundable && r.held > 0) return " · still to be repaid " + esc(money(r.held));
+          if (r.refundable) return " · repaid in full";
+          if (r.hasBudget && r.remaining <= 0) return " · paid in full";
+          if (r.hasBudget) return ` · still ${esc(nameOf("a"))} ${money(Math.max(0, r.stillA))}, ${esc(nameOf("b"))} ${money(Math.max(0, r.stillB))}`;
+          return "";
+        })()}</div>
         ${expenseCurrency(e) !== "ZAR" && (e.zarCents != null || toZarCents(e.amountCents, expenseCurrency(e), e.fxRate) != null) ? `<div class="muted">${esc(moneyZar(e.zarCents != null ? e.zarCents : toZarCents(e.amountCents, expenseCurrency(e), e.fxRate)))}${e.fxRate ? " at " + Number(e.fxRate).toFixed(4) + " / " + expenseCurrency(e) : ""}</div>` : ""}
       </div>
       <div class="row-end">
-        <div class="amount">${esc(money(ledgerCents(e)))}</div>
+        <div class="amount ${isRepayment(e) || isIncomeExp(e) ? "credit" : ""}">${isRepayment(e) || isIncomeExp(e) ? "+" : ""}${esc(money(Math.abs(ledgerCents(e))))}</div>
         ${rowActs("edit-pay", "del-pay", e.id)}
       </div>
     </div>
@@ -850,7 +1460,7 @@ function transferRows(list) {
     <div class="list-row">
       <div>
         <div>${esc(nameOf(t.from))} → ${esc(nameOf(t.to))}${t.notes ? " · " + esc(t.notes) : ""}</div>
-        <div class="muted">${prettyDate(t.date)}</div>
+        <div class="muted">${prettyDate(t.date)}${t.kind && t.kind !== "overall" && t.targetId ? " · " + esc(itemName(t.kind, t.targetId)) : t.kind === "overall" ? " · overall" : ""}</div>
       </div>
       <div class="row-end">
         <div class="amount">${esc(money(t.amountCents))}</div>
@@ -859,13 +1469,13 @@ function transferRows(list) {
     </div>`).join("")}</div>`;
 }
 
-function bucketCard(href, title, meta, bal, extra) {
+function bucketCard(href, title, meta, bal, extra, paidLabel) {
   return `<a class="card" href="#${href}">
     <h3>${esc(title)}</h3>
     <div class="muted">${esc(meta)}</div>
     ${extra || ""}
-    <div style="margin-top:10px">${whoLine(bal)}</div>
-    <div class="muted" style="margin-top:8px">Paid ${esc(money(bal.total))}</div>
+    ${bal && bal.skipWho ? "" : `<div style="margin-top:10px">${whoLine(bal)}</div>`}
+    <div class="muted" style="margin-top:8px">${esc(paidLabel || "Paid")} ${esc(money(Math.abs(bal.total)))}</div>
   </a>`;
 }
 
@@ -874,37 +1484,49 @@ function renderOverview() {
   const cBal = balance(filterExp("contract"), filterXfer("contract"));
   const hBal = balance(filterExp("house"), filterXfer("house"));
   const tBal = balance(filterExp("trip"), filterXfer("trip"));
+  const rentReceived = filterExp("rental").filter(e => !isRepayment(e)).reduce((s, e) => s + Math.abs(ledgerCents(e)), 0);
   const recent = [...state.expenses.map(e => ({...e, _t:"pay"})), ...state.transfers.map(t => ({...t, _t:"xfer"}))]
-    .sort((a,b) => (b.date||"").localeCompare(a.date||"")).slice(0, 8);
-  const cLeft = contractorsOutstanding();
+    .sort((a,b) => (b.date||"").localeCompare(a.date||"") || String(b.id||"").localeCompare(String(a.id||""))).slice(0, 12);
+  const cLeft = outstandingFor("contract");
+  const hLeft = outstandingFor("house");
+  const tLeft = outstandingFor("trip");
+  const stillBits = [];
+  if (cLeft.due) stillBits.push(`Contractors: ${money(Math.max(0, cLeft.remaining))} left (${nameOf("a")} ${money(cLeft.stillA)}, ${nameOf("b")} ${money(cLeft.stillB)})`);
+  if (hLeft.due) stillBits.push(`House: ${money(Math.max(0, hLeft.remaining))} left (${nameOf("a")} ${money(hLeft.stillA)}, ${nameOf("b")} ${money(hLeft.stillB)})`);
+  if (hLeft.held) stillBits.push(`Refundable deposits still with them: ${money(hLeft.held)}`);
+  if (tLeft.due) stillBits.push(`Trips: ${money(Math.max(0, tLeft.remaining))} left (${nameOf("a")} ${money(tLeft.stillA)}, ${nameOf("b")} ${money(tLeft.stillB)})`);
   return `
     <div class="page-kicker">${esc(state.settings.propertyName)}</div>
     <h1 class="page-title">Who owes whom</h1>
     <p class="lede">${overall.even ? "You are settled overall." : `${esc(nameOf(overall.debtor))} owes ${esc(nameOf(overall.creditor))} <strong>${esc(money(overall.owed))}</strong> across contracts, house costs, and trips.`}</p>
-    ${cLeft.due ? `<p class="lede">Still to pay contractors: <strong>${esc(money(Math.max(0, cLeft.remaining)))}</strong> of ${esc(money(cLeft.due))}.</p>` : ""}
+    ${stillBits.length ? `<p class="lede">${stillBits.map(s => esc(s)).join(". ")}.</p>` : ""}
     <div class="toolbar">
       <button class="btn" data-act="pay">Add payment</button>
       <button class="btn ghost" data-act="settle">Settle up</button>
     </div>
-    <div class="cards three">
+    <div class="cards">
       ${bucketCard("/contracts", "Contracts", state.contracts.length + " open", cBal)}
       ${bucketCard("/house", "House", state.house.length + " categories", hBal)}
+      ${bucketCard("/rental", "Rental income", (state.rentals || []).length + " streams", { total: rentReceived, even: true, skipWho: true }, "", "Received")}
       ${bucketCard("/trips", "Trips", state.trips.length + " trips", tBal)}
     </div>
     <div class="card" style="margin-top:18px">
       <h3>Recent</h3>
       ${recent.length ? recent.map(item => item._t === "pay" ? `
         <div class="list-row">
-          <div><div>${esc(item.description)}</div><div class="muted">${prettyDate(item.date)} · ${esc(nameOf(item.paidBy))}</div></div>
+          <div><div>${esc(item.description)}</div><div class="muted">${prettyDate(item.date)} · ${esc(nameOf(item.paidBy))}${item.kind ? " · " + esc(categoryLabel(item.kind)) : ""}${item.targetId ? " · " + esc(itemName(item.kind, item.targetId)) : ""}</div></div>
           <div class="row-end">
-            <div class="amount">${esc(money(item._t === "pay" ? ledgerCents(item) : item.amountCents))}</div>
+            <div class="amount">${esc(money(ledgerCents(item)))}</div>
             ${rowActs("edit-pay", "del-pay", item.id)}
           </div>
         </div>` : `
         <div class="list-row">
-          <div><div>Transfer</div><div class="muted">${prettyDate(item.date)} · ${esc(nameOf(item.from))} → ${esc(nameOf(item.to))}</div></div>
+          <div>
+            <div>Transfer · ${esc(nameOf(item.from))} → ${esc(nameOf(item.to))}</div>
+            <div class="muted">${prettyDate(item.date)} · ${item.kind && item.kind !== "overall" && item.targetId ? esc(categoryLabel(item.kind) + " · " + itemName(item.kind, item.targetId)) : "overall"}${item.notes ? " · " + esc(item.notes) : ""}</div>
+          </div>
           <div class="row-end">
-            <div class="amount">${esc(money(item._t === "pay" ? ledgerCents(item) : item.amountCents))}</div>
+            <div class="amount">${esc(money(item.amountCents))}</div>
             ${rowActs("edit-xfer", "del-xfer", item.id)}
           </div>
         </div>`).join("") : `<div class="empty">Nothing recorded yet.</div>`}
@@ -915,75 +1537,86 @@ function renderOverview() {
 function renderList(kind) {
   const cfg = {
     contract: { title: "Contracts", add: "New contract", items: state.contracts, href: (id) => "/contracts/" + id, empty: "No contracts yet. Add a builder, solar, or service agreement." },
-    house: { title: "House costs", add: "New category", items: state.house, href: (id) => "/house/" + id, empty: "No house categories yet. Try rates, insurance, utilities." },
+    house: { title: "House costs", add: "New category", items: state.house, href: (id) => "/house/" + id, empty: "No house categories yet. Try rates, insurance, utilities, or a refundable deposit." },
+    rental: { title: "Rental income", add: "New rental", items: state.rentals, href: (id) => "/rental/" + id, empty: "No rental income streams yet. Add the Oasis / BP 205 rent here." },
     trip: { title: "Trips", add: "New trip", items: state.trips, href: (id) => "/trips/" + id, empty: "No trips yet." }
   }[kind];
   const cards = cfg.items.map(item => {
-    const bal = balance(filterExp(kind, item.id), filterXfer(kind, item.id));
+    const ex = filterExp(kind, item.id);
+    const bal = balance(ex, filterXfer(kind, item.id));
     let meta = item.vendor || item.location || item.notes || "";
     if (kind === "trip") {
       const ccy = item.currency || "ZAR";
       const dates = item.startDate ? prettyDate(item.startDate) + (item.endDate ? " – " + prettyDate(item.endDate) : "") : "";
       meta = [item.location, ccy, dates].filter(Boolean).join(" · ");
     }
-    let extra = "";
-    if (kind === "contract") {
-      extra = remainingStats(item.totalCents, bal.total);
+    const role = kind === "rental" ? "income" : kind === "house" ? rentalRole(item) : "off";
+    if (role === "income") {
+      const received = ex.filter(e => !isRepayment(e)).reduce((s, e) => s + Math.abs(ledgerCents(e)), 0);
+      meta = [meta, "Rental income"].filter(Boolean).join(" · ");
+      return bucketCard(cfg.href(item.id), item.name, meta, { ...bal, total: received, even: true, skipWho: true }, remainingStats(item, ex, kind, filterXfer(kind, item.id)), "Received");
     }
+    if (role === "cost") meta = [meta, "Rental P&L cost"].filter(Boolean).join(" · ");
+    let extra = remainingStats(item, ex, kind, filterXfer(kind, item.id));
     return bucketCard(cfg.href(item.id), item.name, meta, bal, extra);
   }).join("");
   return `
     <div class="page-kicker">Ledger</div>
     <h1 class="page-title">${cfg.title}</h1>
+    ${kind === "house" ? `<p class="lede">Refundable deposits and Oasis setup fees live here. Pay rental costs from <strong>${esc(jointName())}</strong> with Paid by set to that account — still 50/50, no IOU. Rent received is under <a href="#/rental">Rental income</a>.</p>` : ""}
+    ${kind === "rental" ? `<p class="lede">Record rent as it hits <strong>${esc(jointName())}</strong>. Split is usually 50/50. This is income on the P&amp;L, not a house cost.</p>` : ""}
     <div class="toolbar">
       <button class="btn" data-act="entity" data-kind="${kind}">${cfg.add}</button>
-      <button class="btn ghost" data-act="pay" data-kind="${kind}">Add payment</button>
+      <button class="btn ghost" data-act="pay" data-kind="${kind}">${kind === "rental" ? "Record income" : "Add payment"}</button>
     </div>
     <div class="cards">${cards || `<div class="card empty">${cfg.empty}</div>`}</div>
   `;
 }
 
 function renderDetail(kind, id) {
-  const item = (kind === "contract" ? state.contracts : kind === "house" ? state.house : state.trips).find(x => x.id === id);
-  if (!item) return `<h1 class="page-title">Not found</h1><p><a href="#/${kind === "trip" ? "trips" : kind === "house" ? "house" : "contracts"}">Back</a></p>`;
+  const item = itemOf(kind, id);
+  if (!item) return `<h1 class="page-title">Not found</h1><p><a href="#/${kindPath(kind)}">Back</a></p>`;
   const ex = filterExp(kind, id);
   const xf = filterXfer(kind, id);
   const bal = balance(ex, xf);
-  let extra = "";
-  if (kind === "contract") extra = remainingStats(item.totalCents, bal.total);
-  const back = kind === "trip" ? "/trips" : kind === "house" ? "/house" : "/contracts";
+  const extra = remainingStats(item, ex, kind, xf);
+  const back = "/" + kindPath(kind);
+  const backLabel = kindTitle(kind);
   return `
-    <div class="page-kicker"><a href="#${back}">← ${kind === "trip" ? "Trips" : kind === "house" ? "House" : "Contracts"}</a></div>
+    <div class="page-kicker"><a href="#${back}">← ${esc(backLabel)}</a></div>
     <h1 class="page-title">${esc(item.name)}</h1>
-    <p class="lede">${esc(item.vendor || item.location || item.notes || "")}${kind === "trip" ? ` · Spend in ${esc(item.currency || "ZAR")}, coded to rand.` : ""}</p>
+    <p class="lede">${esc(item.vendor || item.location || item.notes || "")}${kind === "trip" ? ` · Spend in ${esc(item.currency || "ZAR")}, coded to rand.` : ""}${kind === "house" && isRefundable(item) ? " Refundable deposit: pay them with Add payment, then Record repayment when they pay you back (positive amount)." : ""}${kind === "house" && rentalRole(item) === "cost" ? ` Rental P&amp;L cost. Paid by ${esc(jointName())} stays 50/50 with no IOU.` : ""}${kind === "rental" ? ` Rental income. Record receipts into ${esc(jointName())}.` : ""}</p>
     ${extra}
-    <p>${whoLine(bal)}</p>
+    ${kind === "rental" ? "" : `<p>${whoLine(bal)}</p>`}
     <div class="toolbar">
-      <button class="btn" data-act="pay" data-kind="${kind}" data-id="${esc(id)}">Add payment</button>
-      <button class="btn ghost" data-act="settle">Settle up</button>
+      <button class="btn" data-act="pay" data-kind="${kind}" data-id="${esc(id)}">${kind === "rental" ? "Record income" : "Add payment"}</button>
+      ${kind === "house" && isRefundable(item) ? `<button class="btn" data-act="repay" data-kind="${kind}" data-id="${esc(id)}">Record repayment</button>` : ""}
+      ${kind === "rental" ? "" : `<button class="btn ghost" data-act="settle">Settle up</button>`}
       <button class="btn ghost" data-act="entity" data-kind="${kind}" data-id="${esc(id)}">Edit</button>
     </div>
-    <div class="card"><h3>Payments</h3>${expenseRows(ex)}</div>
+    <div class="card"><h3>${kind === "house" && isRefundable(item) ? "Payments and repayments" : kind === "rental" ? "Rent received" : "Payments"}</h3>${expenseRows(ex)}</div>
     ${transferRows(xf)}
   `;
 }
 
 function itemName(kind, id) {
-  if (kind === "contract") return state.contracts.find(x => x.id === id)?.name || id;
-  if (kind === "house") return state.house.find(x => x.id === id)?.name || id;
-  if (kind === "trip") return state.trips.find(x => x.id === id)?.name || id;
-  return "Overall";
+  return itemOf(kind, id)?.name || (kind === "overall" ? "Overall" : id);
 }
 function categoryLabel(kind) {
-  return { contract: "Contract", house: "House", trip: "Trip", overall: "Overall" }[kind] || kind || "";
+  return { contract: "Contract", house: "House", rental: "Rental", trip: "Trip", overall: "Overall" }[kind] || kind || "";
 }
 function xNum(cents) { return ((cents || 0) / 100).toFixed(2); }
+function itemForExpense(e) {
+  if (!e) return null;
+  return itemOf(e.kind, e.targetId);
+}
 function band(cat, total) {
   if (total) return { t: "totaltxt", n: "total" };
   const c = String(cat || "");
   if (/grand total|all contractors|overall total/i.test(c)) return { t: "totaltxt", n: "total" };
   if (/contract/i.test(c)) return { t: "txtC", n: "numC" };
   if (/house/i.test(c)) return { t: "txtH", n: "numH" };
+  if (/rental|income/i.test(c)) return { t: "txtO", n: "numO" };
   if (/trip/i.test(c)) return { t: "txtT", n: "numT" };
   if (/overall/i.test(c)) return { t: "txtO", n: "numO" };
   return { t: "txtN", n: "numN" };
@@ -1010,8 +1643,8 @@ function xSheet(name, bodyRows, filter) {
   return `<Worksheet ss:Name="${esc(safe)}">
 <Names><NamedRange ss:Name="_FilterDatabase" ss:RefersTo="=${q}!${rc}"/></Names>
 <Table>
-<Column ss:AutoFitWidth="0" ss:Width="160"/>
-<Column ss:AutoFitWidth="0" ss:Width="130" ss:Span="16"/>
+<Column ss:AutoFitWidth="0" ss:Width="150"/>
+<Column ss:AutoFitWidth="0" ss:Width="140" ss:Span="18"/>
 ${bodyRows.join("")}
 </Table>
 <AutoFilter x:Range="${rc}" xmlns="urn:schemas-microsoft-com:office:excel"></AutoFilter>
@@ -1019,7 +1652,7 @@ ${bodyRows.join("")}
 </Worksheet>`;
 }
 function headerRow(cols) {
-  return xRow(cols.map(h => xCell(h, "String", "header")));
+  return `<Row ss:Height="36">${cols.map(h => xCell(h, "String", "header")).join("")}</Row>`;
 }
 function filterAt(body, headerHtml, colCount) {
   const i = body.indexOf(headerHtml);
@@ -1045,9 +1678,10 @@ function catBalance(buckets, cat) {
 function reportBuckets(from, to) {
   const groups = [
     { cat: "Overall", name: "All categories", kind: "overall", id: null, exp: filterExp(null, null, from, to), xf: state.transfers.filter(t => (!from || t.date >= from) && (!to || t.date <= to)) },
-    ...state.contracts.map(c => ({ cat: "Contract", name: c.name, kind: "contract", id: c.id, totalCents: c.totalCents, exp: filterExp("contract", c.id, from, to), xf: filterXfer("contract", c.id, from, to) })),
-    ...state.house.map(c => ({ cat: "House", name: c.name, kind: "house", id: c.id, exp: filterExp("house", c.id, from, to), xf: filterXfer("house", c.id, from, to) })),
-    ...state.trips.map(c => ({ cat: "Trip", name: c.name, kind: "trip", id: c.id, exp: filterExp("trip", c.id, from, to), xf: filterXfer("trip", c.id, from, to) }))
+    ...state.contracts.map(c => ({ cat: "Contract", name: c.name, kind: "contract", id: c.id, totalCents: c.totalCents, splitA: c.splitA, exp: filterExp("contract", c.id, from, to), xf: filterXfer("contract", c.id, from, to) })),
+    ...state.house.map(c => ({ cat: "House", name: c.name, kind: "house", id: c.id, totalCents: c.totalCents, splitA: c.splitA, refundable: c.refundable, exp: filterExp("house", c.id, from, to), xf: filterXfer("house", c.id, from, to) })),
+    ...state.rentals.map(c => ({ cat: "Rental", name: c.name, kind: "rental", id: c.id, totalCents: c.totalCents, splitA: c.splitA, exp: filterExp("rental", c.id, from, to), xf: filterXfer("rental", c.id, from, to) })),
+    ...state.trips.map(c => ({ cat: "Trip", name: c.name, kind: "trip", id: c.id, totalCents: c.totalCents, splitA: c.splitA, exp: filterExp("trip", c.id, from, to), xf: filterXfer("trip", c.id, from, to) }))
   ];
   return groups.map(g => ({ ...g, bal: balance(g.exp, g.xf) }));
 }
@@ -1059,14 +1693,17 @@ function downloadExcel() {
   const ledger = state.settings.currency || "ZAR";
   const buckets = reportBuckets(from, to);
   const oweText = (b) => b.even ? "Settled" : `${nameOf(b.debtor)} owes ${nameOf(b.creditor)}`;
-  const cats = ["Contract", "House", "Trip"];
+  const cats = ["Contract", "House", "Rental", "Trip"];
   const totStyle = (n) => xCell(xNum(n), "Number", "total");
 
-  const sumHeader = ["Category","Item","Payments","Spend ("+ledger+")", aName+" paid", bName+" paid", aName+" share", bName+" share", "Who owes", "Amount owed ("+ledger+")", "Contract total", "Still to pay"];
+  const sumHeader = ["Category","Item","Payments","Spend ("+ledger+")", aName+" paid", bName+" paid", aName+" share", bName+" share", "Who owes", "Amount owed ("+ledger+")", "Expected total", "Still to pay", aName+" still to pay", bName+" still to pay"];
   const sumDetail = [];
   const addSum = (g, style) => {
     const b = g.bal;
-    const still = g.totalCents != null ? Math.max(0, g.totalCents - b.total) : "";
+    const r = remainingByPerson({ totalCents: g.totalCents, splitA: g.splitA, name: g.name, refundable: g.refundable }, g.exp, g.xf);
+    const still = r.hasBudget ? Math.max(0, r.remaining) : "";
+    const stillA = Math.max(0, r.stillA);
+    const stillB = Math.max(0, r.stillB);
     const st = style || null;
     sumDetail.push(xRow([
       tx(g.cat, g.cat, st), tx(g.name, g.cat, st),
@@ -1075,7 +1712,8 @@ function downloadExcel() {
       nr(xNum(b.shareA), g.cat, st), nr(xNum(b.shareB), g.cat, st),
       tx(oweText(b), g.cat, st), nr(xNum(b.owed), g.cat, st),
       xCell(g.totalCents != null ? xNum(g.totalCents) : "", g.totalCents != null ? "Number" : "String", g.totalCents != null ? band(g.cat, st).n : band(g.cat, st).t),
-      xCell(still === "" ? "" : xNum(still), still === "" ? "String" : "Number", still === "" ? band(g.cat, st).t : band(g.cat, st).n)
+      xCell(still === "" ? "" : xNum(still), still === "" ? "String" : "Number", still === "" ? band(g.cat, st).t : band(g.cat, st).n),
+      nr(xNum(stillA), g.cat, st), nr(xNum(stillB), g.cat, st)
     ]));
   };
   buckets.filter(g => g.cat !== "Overall" && (g.exp.length || g.xf.length || g.totalCents)).forEach(g => addSum(g));
@@ -1130,23 +1768,26 @@ function downloadExcel() {
     headerRow(whoHeader),
     ...whoRows,
     blankRow(),
-    sectionRow("Still to pay contractors", 5, "sectionStill"),
-    headerRow(["Contractor","Vendor","Contract total","Paid so far","Still to pay"]),
+    sectionRow("Still to pay contractors", 7, "sectionStill"),
+    headerRow(["Contractor","Vendor","Contract total","Paid so far","Still to pay", aName+" still to pay", bName+" still to pay"]),
     ...state.contracts.map(c => {
-      const paid = contractPaid(c.id);
-      const left = stillToPay(c.totalCents, paid);
+      const r = remainingByPerson(c, filterExp("contract", c.id), filterXfer("contract", c.id));
       return xRow([
         xCell(c.name, "String", "txtC"), xCell(c.vendor || "", "String", "txtC"),
         xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String", c.totalCents != null ? "numC" : "txtC"),
-        xCell(xNum(paid), "Number", "numC"),
-        xCell(left == null ? "Set a contract total" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC"))
+        xCell(xNum(r.paid), "Number", "numC"),
+        xCell(r.hasBudget ? xNum(Math.max(0, r.remaining)) : "Set a contract total", r.hasBudget ? "Number" : "String", r.hasBudget ? (r.remaining > 0 ? "oweOpenN" : "numC") : "txtC"),
+        xCell(xNum(Math.max(0, r.stillA)), "Number", r.stillA > 0 ? "oweOpenN" : "numC"),
+        xCell(xNum(Math.max(0, r.stillB)), "Number", r.stillB > 0 ? "oweOpenN" : "numC")
       ]);
     }),
     xRow([
       xCell("ALL CONTRACTORS", "String", "totaltxt"), xCell(""),
-      xCell(xNum(contractorsOutstanding().due), "Number", "total"),
-      xCell(xNum(contractorsOutstanding().paid), "Number", "total"),
-      xCell(xNum(Math.max(0, contractorsOutstanding().remaining)), "Number", "total")
+      xCell(xNum(outstandingFor("contract").due), "Number", "total"),
+      xCell(xNum(outstandingFor("contract").paid), "Number", "total"),
+      xCell(xNum(Math.max(0, outstandingFor("contract").remaining)), "Number", "total"),
+      xCell(xNum(outstandingFor("contract").stillA), "Number", "total"),
+      xCell(xNum(outstandingFor("contract").stillB), "Number", "total")
     ])
   ];
   const summaryBody = [
@@ -1157,21 +1798,23 @@ function downloadExcel() {
     xRow([xCell(oweSentence("Trips", catBalance(buckets, "Trip")), "String", catBalance(buckets, "Trip").even ? "oweSettled" : "oweOpen")]),
     blankRow(),
     ...pivotBlock("Who owes whom by category", whoHeader, whoRows, "sectionWho"),
-    ...pivotBlock("Still to pay contractors", ["Contractor","Vendor","Contract total","Paid so far","Still to pay"], [
+    ...pivotBlock("Still to pay contractors", ["Contractor","Vendor","Contract total","Paid so far","Still to pay", aName+" still to pay", bName+" still to pay"], [
       ...state.contracts.map(c => {
-        const paid = contractPaid(c.id);
-        const left = stillToPay(c.totalCents, paid);
+        const r = remainingByPerson(c, filterExp("contract", c.id), filterXfer("contract", c.id));
         return xRow([
           xCell(c.name, "String", "txtC"), xCell(c.vendor || "", "String", "txtC"),
           xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String", c.totalCents != null ? "numC" : "txtC"),
-          xCell(xNum(paid), "Number", "numC"),
-          xCell(left == null ? "Set a contract total" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC"))
+          xCell(xNum(r.paid), "Number", "numC"),
+          xCell(r.hasBudget ? xNum(Math.max(0, r.remaining)) : "Set a contract total", r.hasBudget ? "Number" : "String", r.hasBudget ? (r.remaining > 0 ? "oweOpenN" : "numC") : "txtC"),
+          xCell(xNum(Math.max(0, r.stillA)), "Number", r.stillA > 0 ? "oweOpenN" : "numC"),
+          xCell(xNum(Math.max(0, r.stillB)), "Number", r.stillB > 0 ? "oweOpenN" : "numC")
         ]);
       }),
       xRow([
         xCell("ALL CONTRACTORS", "String", "totaltxt"), xCell("", "String", "totaltxt"),
-        totStyle(contractorsOutstanding().due), totStyle(contractorsOutstanding().paid),
-        totStyle(Math.max(0, contractorsOutstanding().remaining))
+        totStyle(outstandingFor("contract").due), totStyle(outstandingFor("contract").paid),
+        totStyle(Math.max(0, outstandingFor("contract").remaining)),
+        totStyle(outstandingFor("contract").stillA), totStyle(outstandingFor("contract").stillB)
       ])
     ], "sectionStill"),
     ...pivotBlock("Pivot: category × payer", ["Category", aName, bName, "Total spend ("+ledger+")"], [
@@ -1204,7 +1847,7 @@ function downloadExcel() {
   ].sort((x, y) => (x.date || "").localeCompare(y.date || "") || x.type.localeCompare(y.type));
 
   const runItem = {};
-  const runCat = { Contract: 0, House: 0, Trip: 0, Overall: 0 };
+  const runCat = { Contract: 0, House: 0, Rental: 0, Trip: 0, Overall: 0 };
   let runAll = 0;
   const trackHeader = ["Date","Type","Category","Item","Description","Paid by / transfer","Split","Amount ("+ledger+")","Original amount","Original currency","ZAR","Running item spend","Running category spend","Running total spend"];
   const trackDetail = events.map(ev => {
@@ -1408,21 +2051,24 @@ function downloadExcel() {
     ...xfDetail
   ];
 
-  const contractEntryHeader = ["Contract","Vendor","Date","Description","Paid by","Split","Amount ("+ledger+")", aName, bName, "Original amount","Currency","ZAR booked","Contract total","Paid so far","Still to pay"];
-  const contractPivotHeader = ["Contract","Vendor","Payments", aName+" paid", bName+" paid", "Total ("+ledger+")","Still to pay","Who owes","Amount owed"];
+  const contractEntryHeader = ["Contract","Vendor","Date","Description","Paid by","Split","Amount ("+ledger+")", aName, bName, "Original amount","Currency","ZAR booked","Contract total","Paid so far","Still to pay", aName+" still to pay", bName+" still to pay"];
+  const contractPivotHeader = ["Contract","Vendor","Payments", aName+" paid", bName+" paid", "Total ("+ledger+")","Still to pay", aName+" still to pay", bName+" still to pay","Who owes","Amount owed"];
   const contractPivotRows = [];
   const contractEntryRows = [];
-  let cPayN = 0, cA = 0, cB = 0, cT = 0, cLeftT = 0;
+  let cPayN = 0, cA = 0, cB = 0, cT = 0, cLeftT = 0, cStillA = 0, cStillB = 0;
   for (const c of state.contracts) {
     const ex = filterExp("contract", c.id, from, to).slice().sort((a,b) => a.date.localeCompare(b.date));
     const b = balance(ex, filterXfer("contract", c.id, from, to));
-    const paid = contractPaid(c.id);
-    const left = stillToPay(c.totalCents, paid);
-    cPayN += ex.length; cA += b.paidA; cB += b.paidB; cT += b.total; cLeftT += left != null ? Math.max(0, left) : 0;
+    const r = remainingByPerson(c, filterExp("contract", c.id), filterXfer("contract", c.id));
+    const left = r.hasBudget ? Math.max(0, r.remaining) : null;
+    const aStill = Math.max(0, r.stillA);
+    const bStill = Math.max(0, r.stillB);
+    cPayN += ex.length; cA += b.paidA; cB += b.paidB; cT += b.total; cLeftT += left || 0; cStillA += aStill; cStillB += bStill;
     contractPivotRows.push(xRow([
       tx(c.name, "Contract"), tx(c.vendor || "", "Contract"), nr(ex.length, "Contract"),
       nr(xNum(b.paidA), "Contract"), nr(xNum(b.paidB), "Contract"), nr(xNum(b.total), "Contract"),
-      xCell(left == null ? "Set a total" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC")),
+      xCell(left == null ? "Set a total" : xNum(left), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC")),
+      nr(xNum(aStill), "Contract"), nr(xNum(bStill), "Contract"),
       tx(oweText(b), "Contract"), nr(xNum(b.owed), "Contract")
     ]));
     for (const e of ex) {
@@ -1434,14 +2080,15 @@ function downloadExcel() {
         nr(xNum(e.amountCents), "Contract"), tx(expenseCurrency(e), "Contract"),
         xCell(e.zarCents != null ? xNum(e.zarCents) : "", e.zarCents != null ? "Number" : "String", e.zarCents != null ? "numC" : "txtC"),
         xCell(c.totalCents != null ? xNum(c.totalCents) : "", c.totalCents != null ? "Number" : "String", c.totalCents != null ? "numC" : "txtC"),
-        nr(xNum(paid), "Contract"),
-        xCell(left == null ? "" : xNum(Math.max(0, left)), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC"))
+        nr(xNum(r.paid), "Contract"),
+        xCell(left == null ? "" : xNum(left), left == null ? "String" : "Number", left == null ? "txtC" : (left > 0 ? "oweOpenN" : "numC")),
+        nr(xNum(aStill), "Contract"), nr(xNum(bStill), "Contract")
       ]));
     }
   }
   contractPivotRows.push(xRow([
     xCell("Grand total", "String", "totaltxt"), xCell("", "String", "totaltxt"), xCell(cPayN, "Number", "total"),
-    totStyle(cA), totStyle(cB), totStyle(cT), totStyle(cLeftT), xCell("", "String", "totaltxt"), xCell("", "String", "totaltxt")
+    totStyle(cA), totStyle(cB), totStyle(cT), totStyle(cLeftT), totStyle(cStillA), totStyle(cStillB), xCell("", "String", "totaltxt"), xCell("", "String", "totaltxt")
   ]));
   const contractHead = headerRow(contractEntryHeader);
   const contractBody = [
@@ -1496,40 +2143,42 @@ function downloadExcel() {
   const trackHead = headerRow(trackHeader);
   const sumHead = headerRow(sumHeader);
 
+  const pnl = renderPnlSheet(from, to);
   const xml = `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel">
 <Styles>
-  <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>
-  <Style ss:ID="header"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="section"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionWho"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionStill"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#9A3B32" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionC"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionH"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2C5F8A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionT"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#8A5A2B" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="sectionDetail"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#5C6B73" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="money"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="#,##0.00"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="total"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="totaltxt"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="owehead"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="14" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="oweline"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Size="12" ss:Color="#1C3A4A"/><Interior ss:Color="#EFE7D8" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="oweOpen"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="oweOpenN"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="oweSettled"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="oweSettledN"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtC"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numC"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtH"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numH"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtT"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numT"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtO"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numO"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
-  <Style ss:ID="txtN"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
-  <Style ss:ID="numN"><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
+  <Style ss:ID="header"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="section"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionWho"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionStill"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#9A3B32" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionC"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2F6F4E" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionH"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#2C5F8A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionT"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#8A5A2B" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sectionDetail"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="12" ss:Color="#FFFFFF"/><Interior ss:Color="#5C6B73" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="money"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><NumberFormat ss:Format="#,##0.00"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="total"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="totaltxt"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Color="#1C3A4A"/><Interior ss:Color="#C6A35A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="owehead"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="14" ss:Color="#F4F1EA"/><Interior ss:Color="#1C3A4A" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweline"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Size="12" ss:Color="#1C3A4A"/><Interior ss:Color="#EFE7D8" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweOpen"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweOpenN"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Color="#9A3B32"/><Interior ss:Color="#F8DDD8" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="oweSettled"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="oweSettledN"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Color="#2F6F4E"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtC"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numC"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#D8EDE3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtH"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numH"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#D9E6F5" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtT"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numT"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#F3E6D0" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtO"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numO"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#E5E0F2" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="txtN"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="numN"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Interior ss:Color="#F7F4EE" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
 </Styles>
 ${xSheet("Who owes whom", whoBody, filterAt(whoBody, whoHead, whoHeader.length))}
+${xSheet("Rental P&L", pnl.body, filterAt(pnl.body, pnl.head, pnl.cols))}
 ${xSheet("Summary", summaryBody, filterAt(summaryBody, sumHead, sumHeader.length))}
 ${xSheet("Contracts", contractBody, filterAt(contractBody, contractHead, contractEntryHeader.length))}
 ${xSheet("Trips", tripBody, filterAt(tripBody, tripHead, tripEntryHeader.length))}
@@ -1546,43 +2195,269 @@ ${xSheet("Settlements", xfBody, filterAt(xfBody, xfHead, xfHeader.length))}
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+function pnlModel(from, to) {
+  const income = [];
+  const costs = [];
+  const details = [];
+  const addBucket = (item, kind, label) => {
+    const role = rentalRole(item);
+    if (role === "off") return;
+    const ex = filterExp(kind, item.id, from, to).filter(e => !isRepayment(e)).slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    let total = 0, shareA = 0, joint = 0, pocketA = 0, pocketB = 0;
+    const pct = splitPctA(item);
+    for (const e of ex) {
+      const cents = Math.abs(ledgerCents(e));
+      const partA = Math.round((cents * pct) / 100);
+      total += cents;
+      shareA += partA;
+      if (e.paidBy === "a") pocketA += cents;
+      else if (e.paidBy === "b") pocketB += cents;
+      else if (e.paidBy === "joint") joint += cents;
+      details.push({
+        date: e.date, description: e.description, category: label, role,
+        paidBy: e.paidBy, cents, shareA: partA, shareB: cents - partA, source: kind
+      });
+    }
+    const line = {
+      id: item.id, name: label, n: ex.length, total, shareA, shareB: total - shareA,
+      joint, pocketA, pocketB, role, source: kind
+    };
+    if (role === "income") income.push(line);
+    else costs.push(line);
+  };
+  for (const h of state.house) addBucket(h, "house", h.name);
+  for (const r of state.rentals) addBucket(r, "rental", r.name);
+  for (const c of state.contracts) addBucket(c, "contract", "Contract · " + c.name);
+  details.sort((a, b) => (a.date || "").localeCompare(b.date || "") || String(a.category).localeCompare(String(b.category)));
+  const sum = (arr, k) => arr.reduce((s, x) => s + x[k], 0);
+  const incomeTotal = sum(income, "total");
+  const costTotal = sum(costs, "total");
+  const incomeA = sum(income, "shareA");
+  const costA = sum(costs, "shareA");
+  return {
+    income, costs, details,
+    houseCosts: costs.filter(x => x.source === "house"),
+    contractCosts: costs.filter(x => x.source === "contract"),
+    incomeTotal, costTotal, profit: incomeTotal - costTotal,
+    incomeA, costA, profitA: incomeA - costA,
+    incomeB: incomeTotal - incomeA, costB: costTotal - costA,
+    profitB: (incomeTotal - incomeA) - (costTotal - costA)
+  };
+}
+function pnlAmt(cents, cls) {
+  const n = cents || 0;
+  const klass = (cls || "amt") + (n < 0 ? " owe" : n > 0 ? " credit" : "");
+  return `<td class="${klass}">${esc(money(n))}</td>`;
+}
+function renderPnl(from, to) {
+  const p = pnlModel(from, to);
+  const a = nameOf("a");
+  const b = nameOf("b");
+  const lineRows = (arr) => arr.map(x => `
+    <tr>
+      <td class="name">${esc(x.name)}</td>
+      ${pnlAmt(x.total, "amt")}
+      ${pnlAmt(x.shareA, "amt")}
+      ${pnlAmt(x.shareB, "amt")}
+    </tr>`).join("") || `<tr><td class="name muted" colspan="4">None yet</td></tr>`;
+  const profitCls = p.profit >= 0 ? "profit credit" : "profit owe";
+  const detail = p.details.length ? p.details.map(d => `
+    <tr>
+      <td>${esc(prettyDate(d.date))}</td>
+      <td class="name">${esc(d.description)}</td>
+      <td class="name">${esc(d.category)}</td>
+      <td>${esc(d.role === "income" ? "Income" : "Cost")}</td>
+      <td>${esc(nameOf(d.paidBy))}</td>
+      ${pnlAmt(d.role === "income" ? d.cents : -d.cents, "amt")}
+      ${pnlAmt(d.role === "income" ? d.shareA : -d.shareA, "amt")}
+      ${pnlAmt(d.role === "income" ? d.shareB : -d.shareB, "amt")}
+    </tr>`).join("") : `<tr><td colspan="8">No rental income or costs in this range.</td></tr>`;
+  return `
+    <div class="card" style="overflow:auto">
+      <h3>Rental profit and loss</h3>
+      <p class="muted">${esc(state.settings.propertyName || "Property")} · ${esc(a)} and ${esc(b)} at the category split (usually 50/50). Includes rent, house costs (rates, utilities, Oasis fees), and contracts (painting, floors) so you can claim them. Refundable deposits stay off this statement. Paid from ${esc(jointName())} is a cost or receipt here but does not create an IOU.</p>
+      <table class="pnl-table">
+        <thead>
+          <tr><th class="name">Account</th><th class="amt">Total</th><th class="amt">${esc(a)}</th><th class="amt">${esc(b)}</th></tr>
+        </thead>
+        <tbody>
+          <tr class="section"><td colspan="4">Income</td></tr>
+          ${lineRows(p.income)}
+          <tr class="total"><td class="name">Total income</td>${pnlAmt(p.incomeTotal, "amt")}${pnlAmt(p.incomeA, "amt")}${pnlAmt(p.incomeB, "amt")}</tr>
+          <tr class="section"><td colspan="4">House costs</td></tr>
+          ${lineRows(p.houseCosts)}
+          <tr class="section"><td colspan="4">Contracts</td></tr>
+          ${lineRows(p.contractCosts)}
+          <tr class="total"><td class="name">Total costs</td>${pnlAmt(p.costTotal, "amt")}${pnlAmt(p.costA, "amt")}${pnlAmt(p.costB, "amt")}</tr>
+          <tr class="${profitCls}"><td class="name">${p.profit >= 0 ? "Profit" : "Loss"}</td>${pnlAmt(p.profit, "amt")}${pnlAmt(p.profitA, "amt")}${pnlAmt(p.profitB, "amt")}</tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card" style="overflow:auto;margin-top:16px">
+      <h3>Rental entries</h3>
+      <table class="pnl-table">
+        <thead>
+          <tr><th>Date</th><th class="name">Description</th><th class="name">Category</th><th>Type</th><th>Paid by</th><th class="amt">Amount</th><th class="amt">${esc(a)}</th><th class="amt">${esc(b)}</th></tr>
+        </thead>
+        <tbody>${detail}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderPnlSheet(from, to) {
+  const p = pnlModel(from, to);
+  const aName = nameOf("a");
+  const bName = nameOf("b");
+  const head = ["Line", "Type", "Total", aName, bName];
+  const rows = [
+    sectionRow("Rental profit and loss — " + (state.settings.propertyName || ""), 5, "sectionWho"),
+    xRow([xCell("Includes rent, house costs, and contracts (painting, floors). Refundable deposits are excluded. Paid from " + jointName() + " is included at the split, with no IOU.", "String", "oweline")]),
+    blankRow(),
+    headerRow(head)
+  ];
+  const add = (label, type, tot, sa, sb, isTotal) => {
+    rows.push(xRow([
+      tx(label, "House", isTotal), tx(type, "House", isTotal),
+      nr(xNum(tot), "House", isTotal), nr(xNum(sa), "House", isTotal), nr(xNum(sb), "House", isTotal)
+    ]));
+  };
+  rows.push(sectionRow("Income", 5, "sectionH"));
+  for (const x of p.income) add(x.name, "Income", x.total, x.shareA, x.shareB);
+  add("Total income", "Income", p.incomeTotal, p.incomeA, p.incomeB, true);
+  rows.push(sectionRow("House costs", 5, "sectionH"));
+  for (const x of p.houseCosts) add(x.name, "Cost", x.total, x.shareA, x.shareB);
+  rows.push(sectionRow("Contracts", 5, "sectionC"));
+  for (const x of p.contractCosts) add(x.name, "Cost", x.total, x.shareA, x.shareB);
+  add("Total costs", "Cost", p.costTotal, p.costA, p.costB, true);
+  add(p.profit >= 0 ? "Profit" : "Loss", "Result", p.profit, p.profitA, p.profitB, true);
+  rows.push(blankRow());
+  const dHead = ["Date", "Description", "Category", "Type", "Paid by", "Amount", aName, bName];
+  rows.push(sectionRow("Entries", dHead.length, "sectionDetail"));
+  rows.push(headerRow(dHead));
+  if (!p.details.length) {
+    rows.push(xRow([tx("No rental income or costs in this range", "House")]));
+  } else {
+    for (const d of p.details) {
+      const sign = d.role === "income" ? 1 : -1;
+      rows.push(xRow([
+        tx(d.date, "House"), tx(d.description, "House"), tx(d.category, "House"),
+        tx(d.role === "income" ? "Income" : "Cost", "House"), tx(nameOf(d.paidBy), "House"),
+        nr(xNum(sign * d.cents), "House"), nr(xNum(sign * d.shareA), "House"), nr(xNum(sign * d.shareB), "House")
+      ]));
+    }
+  }
+  const headerHtml = headerRow(head);
+  return { body: rows, head: headerHtml, cols: head.length };
+}
+
+function oweText(b) {
+  if (!b || b.even) return "Settled";
+  return `${nameOf(b.debtor)} owes ${nameOf(b.creditor)} ${money(b.owed)}`;
+}
+function whoSummaryRow(label, b, total) {
+  return `<tr class="${total ? "total" : ""}">
+    <td class="name">${esc(label)}</td>
+    <td class="amt">${esc(money(b.total))}</td>
+    <td class="amt">${esc(money(b.paidA))}</td>
+    <td class="amt">${esc(money(b.paidB))}</td>
+    <td class="${b.even ? "credit" : "owe"}">${esc(oweText(b))}</td>
+  </tr>`;
+}
+function whoDetailRow(label, b, item, exp, xf) {
+  const r = item ? remainingByPerson(item, exp, xf) : null;
+  const leftTxt = !r ? "—" : (r.refundable && r.held > 0 ? "To be repaid " + money(r.held) : (r.hasBudget ? (r.remaining <= 0 ? (r.refundable ? "Repaid in full" : "Paid in full") : money(Math.max(0, r.remaining))) : "—"));
+  const aStill = r ? money(Math.max(0, r.stillA)) : "—";
+  const bStill = r ? money(Math.max(0, r.stillB)) : "—";
+  return `<tr>
+    <td class="name">${esc(label)}</td>
+    <td class="amt">${esc(money(b.total))}</td>
+    <td class="amt">${esc(money(b.paidA))}</td>
+    <td class="amt">${esc(money(b.paidB))}</td>
+    <td>${esc(leftTxt)}</td>
+    <td>${esc(aStill)}</td>
+    <td>${esc(bStill)}</td>
+    <td class="${b.even ? "credit" : "owe"}">${esc(oweText(b))}</td>
+  </tr>`;
+}
+
 function renderReport() {
   const from = document.getElementById("r-from")?.value || "";
   const to = document.getElementById("r-to")?.value || "";
-  const kinds = [
-    { key: "overall", label: "Overall", exp: filterExp(null, null, from, to), xf: filterXfer("overall", null, from, to) },
-    ...state.contracts.map(c => ({ key: c.id, label: "Contract · " + c.name, exp: filterExp("contract", c.id, from, to), xf: filterXfer("contract", c.id, from, to) })),
-    ...state.house.map(c => ({ key: c.id, label: "House · " + c.name, exp: filterExp("house", c.id, from, to), xf: filterXfer("house", c.id, from, to) })),
-    ...state.trips.map(c => ({ key: c.id, label: "Trip · " + c.name, exp: filterExp("trip", c.id, from, to), xf: filterXfer("trip", c.id, from, to) }))
-  ];
-  const rows = kinds.map(k => {
-    const b = balance(k.exp, k.xf);
-    if (!k.exp.length && !k.xf.length && k.key !== "overall") {
-      const con = state.contracts.find(c => c.id === k.key);
-      if (!con) return "";
-    }
-    const con = state.contracts.find(c => c.id === k.key);
-    const left = con && con.totalCents != null ? stillToPay(con.totalCents, contractPaid(con.id)) : null;
-    const leftTxt = left == null ? "—" : (left <= 0 ? "Paid in full" : money(left));
-    const line = b.even ? "Settled" : `${nameOf(b.debtor)} owes ${nameOf(b.creditor)} ${money(b.owed)}`;
-    return `<tr><td>${esc(k.label)}</td><td>${esc(money(b.total))}</td><td>${esc(nameOf("a"))} ${esc(money(b.paidA))}</td><td>${esc(nameOf("b"))} ${esc(money(b.paidB))}</td><td>${esc(leftTxt)}</td><td class="${b.even ? "credit" : "owe"}">${esc(line)}</td></tr>`;
-  }).join("");
   const overall = balance(filterExp(null, null, from, to), filterXfer("overall", null, from, to));
+  const cBal = balance(filterExp("contract", null, from, to), filterXfer("contract", null, from, to));
+  const hBal = balance(filterExp("house", null, from, to), filterXfer("house", null, from, to));
+  const tBal = balance(filterExp("trip", null, from, to), filterXfer("trip", null, from, to));
+  const a = nameOf("a");
+  const b = nameOf("b");
+  const group = (kind, items, title) => {
+    const body = items.map(item => {
+      const exp = filterExp(kind, item.id, from, to);
+      const xf = filterXfer(kind, item.id, from, to);
+      return whoDetailRow(item.name, balance(exp, xf), item, exp, xf);
+    }).join("");
+    if (!items.length) return "";
+    return `<tr class="section"><td colspan="8">${esc(title)}</td></tr>${body}`;
+  };
   return `
     <div class="page-kicker">Statement</div>
-    <h1 class="page-title">Who owes whom</h1>
-    <p class="lede">${overall.even ? "Settled across the selected dates." : `${esc(nameOf(overall.debtor))} owes ${esc(nameOf(overall.creditor))} <strong>${esc(money(overall.owed))}</strong>.`}</p>
+    <h1 class="page-title">Rental P&amp;L and who owes whom</h1>
+    <p class="lede">${overall.even ? "Settled across the selected dates." : `${esc(nameOf(overall.debtor))} owes ${esc(nameOf(overall.creditor))} <strong>${esc(money(overall.owed))}</strong>.`} Rental profit is separate — it is each person’s share of rent minus rental costs, including amounts paid from ${esc(jointName())}.</p>
     <div class="toolbar">
       <label style="margin:0">From <input id="r-from" type="date" value="${esc(from)}" /></label>
       <label style="margin:0">To <input id="r-to" type="date" value="${esc(to)}" /></label>
       <button class="btn ghost sm" data-act="reprint">Apply dates</button>
       <button class="btn" data-act="excel">Download Excel</button>
+      <button class="btn ghost sm" data-act="settle">Settle up</button>
       <button class="btn ghost sm" onclick="window.print()">Print</button>
     </div>
-    <div class="card" style="overflow:auto">
-      <table>
-        <thead><tr><th>Bucket</th><th>Spend</th><th>${esc(nameOf("a"))} paid</th><th>${esc(nameOf("b"))} paid</th><th>Still to pay contractor</th><th>Between you</th></tr></thead>
-        <tbody>${rows || `<tr><td colspan="5">Nothing in this range.</td></tr>`}</tbody>
+    <div class="card who-summary" style="overflow:auto">
+      <h3>Who owes whom — totals</h3>
+      <div class="stats four">
+        <div><div class="lbl">Overall</div><div class="amount ${overall.even ? "credit" : "owe"}">${esc(oweText(overall))}</div></div>
+        <div><div class="lbl">Contracts</div><div class="amount ${cBal.even ? "credit" : "owe"}">${esc(oweText(cBal))}</div></div>
+        <div><div class="lbl">House</div><div class="amount ${hBal.even ? "credit" : "owe"}">${esc(oweText(hBal))}</div></div>
+        <div><div class="lbl">Trips</div><div class="amount ${tBal.even ? "credit" : "owe"}">${esc(oweText(tBal))}</div></div>
+      </div>
+      <table class="pnl-table">
+        <thead>
+          <tr>
+            <th class="name">Bucket</th>
+            <th class="amt">Spend</th>
+            <th class="amt">${esc(a)} paid</th>
+            <th class="amt">${esc(b)} paid</th>
+            <th>Between you</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${whoSummaryRow("Overall", overall, true)}
+          ${whoSummaryRow("Contracts", cBal)}
+          ${whoSummaryRow("House", hBal)}
+          ${whoSummaryRow("Trips", tBal)}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:16px">${renderPnl(from, to)}</div>
+    <div class="card" style="overflow:auto;margin-top:16px">
+      <h3>Who owes whom — detail</h3>
+      <table class="pnl-table">
+        <thead>
+          <tr>
+            <th class="name">Item</th>
+            <th class="amt">Spend</th>
+            <th class="amt">${esc(a)} paid</th>
+            <th class="amt">${esc(b)} paid</th>
+            <th>Still to pay</th>
+            <th>${esc(a)} still</th>
+            <th>${esc(b)} still</th>
+            <th>Between you</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${group("contract", state.contracts, "Contracts")}
+          ${group("house", state.house, "House")}
+          ${group("trip", state.trips, "Trips") || `<tr><td colspan="8">Nothing in this range.</td></tr>`}
+        </tbody>
       </table>
     </div>
     <div class="card" style="margin-top:16px"><h3>All payments</h3>${expenseRows(filterExp(null, null, from, to))}</div>
@@ -1603,7 +2478,9 @@ function renderSettings() {
       <input name="property" value="${esc(state.settings.propertyName)}" />
       <label>Ledger currency</label>
       <select name="currency">${currencyOpts(state.settings.currency || "ZAR")}</select>
-      <p class="muted">House and contract costs use this. Trip costs in other currencies are converted into this using the ZAR rate.</p>
+      <label>Joint rental account (Paid by)</label>
+      <input name="joint" value="${esc(jointName())}" />
+      <p class="muted">House and contract costs use the ledger currency. Trip costs in other currencies are converted into this using the ZAR rate. Choose this account as Paid by when money moves through Capitec — the split stays 50/50 and neither of you owes the other for that line.</p>
       <div class="toolbar" style="margin-top:16px"><button class="btn" type="submit">Save</button></div>
     </form>
     <div class="card" style="margin-top:16px;max-width:520px">
@@ -1618,8 +2495,19 @@ function renderSettings() {
       <div class="toolbar"><button class="btn ghost" type="button" data-act="fx-refresh">Refresh rates</button></div>
     </div>
     <div class="card" style="margin-top:16px;max-width:520px">
+      <h3>Pi database</h3>
+      <p class="muted">${serverOk ? "Saved on the Pi" + (serverAt ? " · " + esc(serverAt.replace("T", " ").slice(0, 19)) + " UTC" : "") + "." : "Not talking to the Pi right now. Edits may only be in this browser."}</p>
+      <label>Save PIN</label>
+      <input id="pin-field" value="${esc(pin())}" autocomplete="off" />
+      <p class="muted">Once you are signed in as ian or trudie, saves go to the Pi automatically — you should not need this PIN. The ledger lives in SQLite on the Pi, with a history of the last 200 saves.</p>
+      <div class="toolbar" style="margin-top:16px">
+        <button class="btn" type="button" data-act="save-pin">Remember PIN</button>
+        <a class="btn ghost" href="/logout">Log out</a>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;max-width:520px">
       <h3>Backup</h3>
-      <p class="muted">This file stores data in this browser only. Export a copy if you care about it.</p>
+      <p class="muted">Extra copy on your computer. The live data is on the Pi.</p>
       <div class="toolbar">
         <button class="btn ghost" data-act="export">Export JSON</button>
         <label class="btn ghost" style="margin:0">Import JSON<input type="file" id="imp" accept="application/json" hidden /></label>
@@ -1648,6 +2536,8 @@ function render() {
   else if (root === "contracts") html = renderList("contract");
   else if (root === "house" && id) html = renderDetail("house", id);
   else if (root === "house") html = renderList("house");
+  else if (root === "rental" && id) html = renderDetail("rental", id);
+  else if (root === "rental") html = renderList("rental");
   else if (root === "trips" && id) html = renderDetail("trip", id);
   else if (root === "trips") html = renderList("trip");
   else if (root === "report") html = renderReport();
@@ -1663,6 +2553,7 @@ function render() {
     state.people.b.name = set.b.value.trim() || "Sam";
     state.settings.propertyName = set.property.value.trim() || "Home";
     state.settings.currency = set.currency.value;
+    state.settings.jointName = set.joint.value.trim() || "Capitec";
     save(); render();
   });
   const imp = document.getElementById("imp");
@@ -1674,8 +2565,8 @@ function render() {
       try {
         const d = JSON.parse(reader.result);
         if (!d.people || !d.expenses) throw new Error("bad");
-        state = d;
-        state.house = d.house || d.houseCategories || [];
+        state = normalize(d);
+        delete state._rentalsMoved;
         save(); render();
       } catch { alert("That file is not a Halves backup."); }
     };
@@ -1694,6 +2585,7 @@ document.addEventListener("click", (e) => {
   const id = t.getAttribute("data-id");
   if (act === "close") closeDialog();
   if (act === "pay") paymentDialog({ kind, targetId: id });
+  if (act === "repay") paymentDialog({ kind, targetId: id, repayment: true });
   if (act === "edit-pay") paymentDialog({ id });
   if (act === "del-pay") {
     if (!confirm("Delete this payment?")) return;
@@ -1708,8 +2600,7 @@ document.addEventListener("click", (e) => {
     save(); render();
   }
   if (act === "entity") {
-    const list = kind === "contract" ? state.contracts : kind === "house" ? state.house : state.trips;
-    entityDialog(kind, id ? list.find(x => x.id === id) : null);
+    entityDialog(kind, id ? itemOf(kind, id) : null);
   }
   if (act === "fx-refresh") {
     fetchFx().then(ok => {
@@ -1726,17 +2617,24 @@ document.addEventListener("click", (e) => {
     a.download = "halves-backup.json";
     a.click();
   }
+  if (act === "save-pin") {
+    const field = document.getElementById("pin-field");
+    localStorage.setItem("halves-pin", (field?.value || "").trim());
+    save(); render();
+  }
   if (act === "demo") {
-    if (confirm("Replace current data with the sample household?")) { state = clone(DEMO); save(); render(); }
+    if (confirm("Replace the Pi copy with the sample household?")) { state = clone(DEMO); save(); render(); }
   }
   if (act === "clear") {
-    if (confirm("Erase all payments, contracts, trips, and house costs on this browser?")) { state = emptyLedger(); save(); render(); }
+    if (confirm("Erase all payments, contracts, trips, and house costs on the Pi and this browser?")) { state = emptyLedger(); save(); render(); }
   }
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDialog(); });
 window.addEventListener("hashchange", render);
-render();
-fetchFx().then(ok => { if (ok) render(); });
+pullFromServer().then(() => {
+  render();
+  fetchFx().then(ok => { if (ok) render(); });
+});
 </script>
 </body>
 </html>

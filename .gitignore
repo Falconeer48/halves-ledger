@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+halves.db
+halves.secret
+halves.users
+halves.authkey
+halves-backup.json
